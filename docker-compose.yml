@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  database:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: forensic_admin
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: evidence_db
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  minio:
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_secure_password
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["minio_data:/data"]
+  createbuckets:
+    image: quay.io/minio/mc:latest
+    depends_on: [minio]
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minio_admin minio_secure_password;
+      /usr/bin/mc mb --with-lock myminio/evidence-vault;
+      /usr/bin/mc retention set --default COMPLIANCE 365d myminio/evidence-vault;
+      exit 0;
+      "
+  backend:
+    build: ./backend
+    depends_on: [database, minio, createbuckets]
+    environment:
+      DATABASE_URL: postgresql://forensic_admin:secure_password@database:5432/evidence_db
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio_admin
+      MINIO_SECRET_KEY: minio_secure_password
+      WEB3_RPC_URL: ${WEB3_RPC_URL}
+      CONTRACT_ADDRESS: ${CONTRACT_ADDRESS}
+      WALLET_PRIVATE_KEY: ${WALLET_PRIVATE_KEY}
+    ports: ["8000:8000"]
+  frontend:
+    build: ./frontend
+    depends_on: [backend]
+    ports: ["3000:3000"]
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+volumes:
+  postgres_data:
+  minio_data:
