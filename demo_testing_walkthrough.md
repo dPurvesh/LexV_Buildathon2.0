@@ -58,7 +58,7 @@ Verify that all features are visible across all roles, but actions outside a per
 ### Step-by-Step Actions:
 
 #### A. Verify Initial Persona (Investigator `1001`):
-1. In the topbar header on the right, look at the role pill: **`[ 🛡️ Investigator • 1001 ▾ ]`**.
+1. In the topbar header on the right, look at the role pill: **`[ 🛡️ Investigator ▾ ]`**.
 2. Click the **Upload** tab: It opens normally with full batch file ingestion capabilities.
 3. Click the **Evidence Vault** tab, and click any row (e.g. `CCTV Bodycam Footage`) to open the inspector drawer.
 4. Observe the action buttons at the bottom of the drawer:
@@ -69,20 +69,20 @@ Verify that all features are visible across all roles, but actions outside a per
    - A frosted glass dialog pops up: **"Access Restricted — Error Level Analysis Heatmap requires clearance reserved for Forensic Analyst."**
    - Shows your active role: `🛡️ Investigator` ➔ Required: `🔬 Forensic Analyst`.
 
-#### B. Switch to Forensic Analyst (`2002`):
-1. In the open dialog, type **`2002`** on your keyboard (or click the quick demo pill **`[ 🔬 Analyst 2002 ]`**).
-2. Click **Unlock** (or press Enter):
+#### B. Unlock with Forensic Analyst PIN (`2002`):
+1. In the open dialog, type **`2002`** on your keyboard.
+2. Click **Unlock** (or press `Enter`):
    - The modal closes and the ELA Tamper Heatmap opens immediately!
-   - Look at the topbar: The badge has transformed to **`[ 🔬 Forensic Analyst • 2002 ▾ ]`** in glowing purple.
+   - Look at the topbar: The badge has transformed to **`[ 🔬 Forensic Analyst ▾ ]`** in glowing purple.
 3. Now, click on the **Upload** tab in the main navigation:
    - The tab shows a lock badge: **`Upload 🔒`**.
    - The content displays the **"Evidence Ingestion Locked"** security notice explaining that raw ingestion is restricted to Law Enforcement Investigators.
    - In the inspector drawer, `🔒 Transfer Custody` is now locked.
 
-#### C. Switch to Court Auditor (`3003`):
-1. Click the topbar role pill **`[ 🔬 Forensic Analyst • 2002 ▾ ]`**.
-2. Type **`3003`** on your keyboard (or click **`[ ⚖️ Auditor 3003 ]`**).
-3. The topbar updates to **`[ ⚖️ Court Auditor • 3003 ▾ ]`** in emerald green.
+#### C. Unlock with Court Auditor PIN (`3003`):
+1. Click the topbar role pill **`[ 🔬 Forensic Analyst ▾ ]`**.
+2. Type **`3003`** on your keyboard and press `Enter`.
+3. The topbar updates to **`[ ⚖️ Court Auditor ▾ ]`** in emerald green.
 4. In the Evidence Vault table:
    - **`📥 Export CSV Ledger`** is now unlocked and active!
    - In the inspector drawer: **`📜 Court Dossier (PDF)`** is now unlocked and active!
@@ -98,7 +98,7 @@ Verify that all features are visible across all roles, but actions outside a per
 - **Why**: Proves to the jury that the application enforces institutional security and separation of evidentiary duties, fulfilling Section 65B statutory chain-of-custody mandates.
 
 ### Jury Talking Script:
-> *"A frequent criticism of student projects is that 'anyone can click any button and alter records.' In LEXVAULT, we implemented strict Role-Based Access Control with 3 distinct professional personas. An investigator cannot fake an ELA analysis; an analyst cannot tamper with legal custody handovers; and only a certified legal auditor can issue an official Section 65B court certificate. Notice that examiners can type the PIN directly on the keyboard or use the demo shortcuts to test each persona live."*
+> *"A frequent criticism of student projects is that 'anyone can click any button and alter records.' In LEXVAULT, we implemented strict Role-Based Access Control with 3 distinct professional personas authenticated via individual clearance PINs. An investigator cannot fake an ELA analysis; an analyst cannot tamper with legal custody handovers; and only a certified legal auditor can issue an official Section 65B court certificate."*
 
 ---
 

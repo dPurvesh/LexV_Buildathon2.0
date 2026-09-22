@@ -135,7 +135,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         return { success: true, role };
       }
     }
-    return { success: false, error: 'Invalid PIN. (Demo PINs: 1001, 2002, 3003)' };
+    return { success: false, error: 'Invalid authorization PIN. Access denied.' };
   };
 
   const hasPermission = (permission: Permission): boolean => {

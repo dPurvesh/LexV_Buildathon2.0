@@ -69,12 +69,6 @@ export default function RoleLockModal() {
     }
   };
 
-  const handleQuickSelect = (r: Role) => {
-    const roleInfo = ROLES[r];
-    setPin(roleInfo.pin);
-    handleVerify(roleInfo.pin);
-  };
-
   return (
     <div className="role-modal-backdrop" onClick={handleClose}>
       <div className="role-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -97,7 +91,7 @@ export default function RoleLockModal() {
                 .
               </>
             ) : (
-              'Enter an authorized 4-digit PIN or click a demo persona to switch roles.'
+              'Enter an authorized 4-digit PIN to authenticate.'
             )}
           </p>
         </div>
@@ -122,10 +116,10 @@ export default function RoleLockModal() {
             <input
               id="role-pin-input"
               ref={inputRef}
-              type="text"
+              type="password"
               inputMode="numeric"
               maxLength={8}
-              placeholder="e.g. 1001, 2002, 3003"
+              placeholder="Enter 4-digit PIN"
               value={pin}
               onChange={(e) => {
                 setPin(e.target.value);
@@ -139,33 +133,6 @@ export default function RoleLockModal() {
             </button>
           </div>
           {error && <span className="pin-error-msg">{error}</span>}
-        </div>
-
-        <div className="quick-switch-section">
-          <span className="quick-label">Or Select Demo Persona (Instant Switch):</span>
-          <div className="quick-pill-grid">
-            {(Object.keys(ROLES) as Role[]).map((r) => {
-              const info = ROLES[r];
-              const isSelected = currentRole === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  className={`quick-pill ${isSelected ? 'active' : ''}`}
-                  style={{
-                    borderColor: isSelected ? info.color : 'rgba(255,255,255,0.12)',
-                  }}
-                  onClick={() => handleQuickSelect(r)}
-                  title={`Switch to ${info.name} (PIN: ${info.pin})`}
-                >
-                  <span className="pill-badge">{info.badge}</span>
-                  <span className="pill-pin" style={{ color: info.color }}>
-                    PIN: {info.pin}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         <div className="role-modal-footer">

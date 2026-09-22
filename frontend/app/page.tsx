@@ -250,7 +250,7 @@ export default function Home() {
                   chain-of-custody.
                 </p>
                 <div className="locked-tab-badges">
-                  <span className="pill-badge required">Required Clearance: 🛡️ Investigator (PIN: 1001)</span>
+                  <span className="pill-badge required">Required Clearance: 🛡️ Investigator</span>
                   <span className="pill-badge current">Your Active Role: {roleInfo.badge}</span>
                 </div>
                 <button
