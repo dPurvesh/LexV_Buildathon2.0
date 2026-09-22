@@ -1,0 +1,27 @@
+'use client';
+
+import React from 'react';
+import { useRole } from '../context/RoleContext';
+
+export default function RoleBadge() {
+  const { roleInfo, openSwitchModal } = useRole();
+
+  return (
+    <button
+      type="button"
+      className="role-selector-pill"
+      onClick={openSwitchModal}
+      style={{
+        borderColor: `${roleInfo.color}44`,
+      }}
+      title={`Active Persona: ${roleInfo.name} (PIN: ${roleInfo.pin}). Click to switch role.`}
+    >
+      <span className="role-dot" style={{ backgroundColor: roleInfo.color, boxShadow: `0 0 8px ${roleInfo.color}` }} />
+      <span className="role-name">{roleInfo.badge}</span>
+      <span className="role-pin-tag" style={{ color: roleInfo.color }}>
+        {roleInfo.pin}
+      </span>
+      <span className="role-chevron">▾</span>
+    </button>
+  );
+}

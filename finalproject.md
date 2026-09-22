@@ -176,7 +176,33 @@ CREATE TABLE evidence_ai_index (
 
 ---
 
-## 6. Legal & Regulatory Compliance
+## 6. Role-Based Access Control (RBAC) & Forensic Personas
+
+LEXVAULT enforces strict separation of evidentiary duties through three pre-configured forensic personas authenticated via 4-digit PINs. In accordance with forensic transparency principles, **all features remain visible in the UI**, but actions outside a persona's statutory jurisdiction are rendered as **LOCKED** (with visual padlock indicators and interactive elevation dialogs).
+
+### Persona Matrix & Authorization Boundaries
+
+| Dimension | 🛡️ Investigator | 🔬 Forensic Analyst | ⚖️ Court Auditor |
+| :--- | :--- | :--- | :--- |
+| **Default PIN** | **`1001`** | **`2002`** | **`3003`** |
+| **Statutory Role** | Law Enforcement Officer | Forensic Laboratory Specialist | Legal & Compliance Officer |
+| **Evidence Ingestion** | ✅ **Authorized** (Single & Batch) | 🔒 **Locked** (Restricted) | 🔒 **Locked** (Read-Only) |
+| **Chain of Custody Transfer** | ✅ **Authorized** (Legal handover) | 🔒 **Locked** (No custody authority)| 🔒 **Locked** (Audit authority only)|
+| **ELA Tamper Heatmap** | 🔒 **Locked** (Specialist tool) | ✅ **Authorized** (Full inspection) | 🔒 **Locked** (Specialist tool) |
+| **Audio Speech Transcription** | 🔒 **Locked** (Specialist tool) | ✅ **Authorized** (Waveform/Words) | 🔒 **Locked** (Specialist tool) |
+| **Section 65B Court Dossier (PDF)**| 🔒 **Locked** (Requires Auditor) | 🔒 **Locked** (Requires Auditor) | ✅ **Authorized** (Official seal) |
+| **Global Ledger CSV Audit** | 🔒 **Locked** (Requires Auditor) | 🔒 **Locked** (Requires Auditor) | ✅ **Authorized** (Full export) |
+| **Verification Dropzone** | ✅ **Authorized** | ✅ **Authorized** | ✅ **Authorized** |
+| **Evidence Vault (Read)** | ✅ **Authorized** | ✅ **Authorized** | ✅ **Authorized** |
+
+### Interactive Unlock & Elevation Workflow
+1. **Visual Lock Signifiers**: Restricted buttons display a `🔒` badge, muted opacity, and hover alerts indicating the required persona.
+2. **Tab Access Guard**: Clicking the **Upload** tab as an Analyst or Auditor renders an explanatory restricted-jurisdiction notice with statutory justification.
+3. **Instant Elevation Modal**: Clicking any locked feature launches a frosted glass authorization dialog where the evaluator can either type the authorized PIN via keyboard or select one-click demo persona pills.
+
+---
+
+## 7. Legal & Regulatory Compliance
 
 ### Section 65B, Indian Evidence Act, 1872 / BSA 2023
 Section 65B mandates that electronic records are admissible only if accompanied by an official certificate detailing:
@@ -195,7 +221,7 @@ Adheres to international guidelines for digital evidence collection and preserva
 
 ---
 
-## 7. Current Network & Environment Ports
+## 8. Current Network & Environment Ports
 
 - **Frontend Application**: `http://localhost:3001` (Next.js 15 dev server)
 - **Backend REST Gateway**: `http://localhost:8000` (FastAPI + Uvicorn)

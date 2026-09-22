@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import ELAViewer from './ELAViewer';
 import TranscriptPlayer from './TranscriptPlayer';
 import CustodyTransferModal from './CustodyTransferModal';
+import { useRole } from '../context/RoleContext';
 
 type EvidenceDetail = {
   id: string;
@@ -247,6 +248,7 @@ export default function EvidenceInspector({
                         <small>
                           {entry.from_custodian?.trim().slice(0, 10)}… → {entry.to_custodian?.trim().slice(0, 10)}…
                         </small>
+                        {entry.notes && <p className="notes-text">{entry.notes}</p>}
                         <time>{new Date(entry.timestamp).toLocaleString()}</time>
                       </div>
                     </div>
@@ -257,29 +259,83 @@ export default function EvidenceInspector({
 
             {/* Actions */}
             <div className="inspector-actions">
-              <button
-                className="button button-primary"
-                onClick={() => setShowTransfer(true)}
-              >
-                ⚡ Transfer Custody
-              </button>
-              {evidence.mime_type?.startsWith('image/') && (
-                <button className="button button-secondary" onClick={() => setShowELA(true)}>
-                  🔬 ELA Heatmap
+              {hasPermission('custody_transfer') ? (
+                <button className="button button-primary" onClick={() => setShowTransfer(true)}>
+                  ⚡ Transfer Custody
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-primary locked-action-btn"
+                  onClick={() =>
+                    openLockModal('Chain of Custody Transfer', 'investigator', () => setShowTransfer(true))
+                  }
+                  title="Restricted: Requires Law Enforcement Investigator clearance (PIN 1001)"
+                >
+                  🔒 Transfer Custody
                 </button>
               )}
-              {(evidence.mime_type?.startsWith('audio/') || evidence.mime_type?.startsWith('video/')) && (
-                <button className="button button-secondary" onClick={() => setShowTranscript(true)}>
-                  🎙 Transcript
+
+              {evidence.mime_type?.startsWith('image/') &&
+                (hasPermission('ela_heatmap') ? (
+                  <button className="button button-secondary" onClick={() => setShowELA(true)}>
+                    🔬 ELA Heatmap
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-secondary locked-action-btn"
+                    onClick={() =>
+                      openLockModal('Error Level Analysis Heatmap', 'forensic_analyst', () => setShowELA(true))
+                    }
+                    title="Restricted: Requires Forensic Analyst clearance (PIN 2002)"
+                  >
+                    🔒 ELA Heatmap
+                  </button>
+                ))}
+
+              {(evidence.mime_type?.startsWith('audio/') || evidence.mime_type?.startsWith('video/')) &&
+                (hasPermission('transcript') ? (
+                  <button className="button button-secondary" onClick={() => setShowTranscript(true)}>
+                    🎙 Transcript
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-secondary locked-action-btn"
+                    onClick={() =>
+                      openLockModal('Speech-to-Text Transcription', 'forensic_analyst', () => setShowTranscript(true))
+                    }
+                    title="Restricted: Requires Forensic Analyst clearance (PIN 2002)"
+                  >
+                    🔒 Transcript
+                  </button>
+                ))}
+
+              {hasPermission('court_dossier') ? (
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => window.open(`${API_BASE}/api/v1/evidence/${evidenceId}/certificate`, '_blank')}
+                  title="Generate and download court-admissible PDF certificate with QR verification"
+                >
+                  📜 Court Dossier (PDF)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-secondary locked-action-btn"
+                  onClick={() =>
+                    openLockModal('Section 65B Court Dossier Certificate', 'auditor', () =>
+                      window.open(`${API_BASE}/api/v1/evidence/${evidenceId}/certificate`, '_blank')
+                    )
+                  }
+                  title="Restricted: Requires Compliance Auditor clearance (PIN 3003)"
+                >
+                  🔒 Court Dossier (PDF)
                 </button>
               )}
-              <button
-                className="button button-secondary"
-                onClick={() => window.open(`${API_BASE}/api/v1/evidence/${evidenceId}/certificate`, '_blank')}
-                title="Generate and download court-admissible PDF certificate with QR verification"
-              >
-                📜 Court Dossier (PDF)
-              </button>
+
               <button className="button button-secondary" onClick={copyShareLink}>
                 {copied ? '✓ Copied!' : '🔗 Share Link'}
               </button>

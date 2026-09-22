@@ -868,3 +868,377 @@ footer {
   .batch-fields-grid { grid-template-columns: 1fr; }
   .transcript-layout { grid-template-columns: 1fr; }
 }
+
+/* ═══ ROLE-BASED ACCESS CONTROL (RBAC) STYLING ═══ */
+
+/* Topbar Role Selector Pill */
+.role-selector-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(26, 20, 56, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Inter', sans-serif;
+}
+.role-selector-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background: rgba(35, 27, 75, 0.85);
+}
+.role-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.role-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+.role-pin-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.role-chevron {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.role-selector-pill:hover .role-chevron {
+  color: var(--ink);
+  transform: translateY(1px);
+}
+
+/* Tab Lock Indicators */
+.tab-locked {
+  opacity: 0.75;
+}
+.tab-lock-badge {
+  font-size: 11px;
+  margin-left: 4px;
+  opacity: 0.85;
+}
+
+/* Locked Action Buttons */
+.locked-action-btn {
+  opacity: 0.72 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--muted) !important;
+  cursor: pointer !important;
+  position: relative;
+  transition: all 0.2s ease !important;
+}
+.locked-action-btn:hover {
+  opacity: 1 !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
+  color: #fda4af !important;
+  background: rgba(244, 63, 94, 0.08) !important;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.2) !important;
+}
+
+/* Locked Tab Banner / Panel */
+.locked-tab-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  min-height: 420px;
+  text-align: center;
+  background: rgba(18, 14, 40, 0.65);
+  border: 1px dashed rgba(139, 92, 246, 0.25);
+  border-radius: var(--radius-lg);
+}
+.locked-tab-content {
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.locked-tab-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+}
+.locked-tab-content h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+.locked-tab-content p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+.locked-tab-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin: 10px 0;
+}
+.locked-tab-badges .pill-badge {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-family: 'Fira Code', monospace;
+}
+.locked-tab-badges .pill-badge.required {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+.locked-tab-badges .pill-badge.current {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.locked-tab-unlock-btn {
+  margin-top: 6px;
+  padding: 10px 22px;
+  font-size: 13px;
+  border-radius: var(--radius-pill);
+}
+
+/* ═══ ROLE MODAL (SWITCH & UNLOCK) ═══ */
+.role-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 18, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  z-index: 120;
+  padding: 20px;
+  animation: fadeIn 0.2s ease-out;
+}
+.role-modal-card {
+  position: relative;
+  background: rgba(20, 16, 44, 0.96);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.15);
+  border-radius: var(--radius-lg);
+  max-width: 480px;
+  width: 100%;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: slideInUp 0.25s ease-out;
+}
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.role-modal-card .modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.role-modal-card .modal-close-btn:hover {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.5);
+}
+.role-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.lock-icon-halo {
+  font-size: 36px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.2);
+}
+.role-modal-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+.role-modal-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+.role-highlight {
+  font-weight: 700;
+}
+
+.role-status-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.role-status-comparison .role-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.role-status-comparison .role-pill small {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.role-status-comparison .role-pill strong {
+  font-size: 12px;
+}
+.arrow-sep {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* PIN Entry Input */
+.pin-entry-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pin-entry-section label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.pin-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+.pin-input {
+  flex: 1;
+  background: rgba(12, 10, 26, 0.85);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-family: 'Fira Code', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  outline: none;
+  transition: all 0.2s;
+}
+.pin-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.35);
+  background: rgba(16, 12, 34, 0.95);
+}
+.pin-input.has-error {
+  border-color: #f43f5e;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
+}
+.pin-submit-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.pin-error-msg {
+  font-size: 11px;
+  color: #fda4af;
+  font-family: 'Fira Code', monospace;
+}
+
+/* Quick Switch Section */
+.quick-switch-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.quick-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.quick-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.quick-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quick-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.quick-pill.active {
+  background: rgba(139, 92, 246, 0.15);
+}
+.quick-pill .pill-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.quick-pill .pill-pin {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.role-modal-footer {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.7;
+}

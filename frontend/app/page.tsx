@@ -8,6 +8,8 @@ import EvidenceTable from '../components/EvidenceTable';
 import EvidenceInspector from '../components/EvidenceInspector';
 import BatchUpload from '../components/BatchUpload';
 import CasePortfolio from '../components/CasePortfolio';
+import RoleBadge from '../components/RoleBadge';
+import { useRole } from '../context/RoleContext';
 
 type Tab = 'repository' | 'cases' | 'upload' | 'verify' | 'health';
 type DashboardStats = {
@@ -48,6 +50,7 @@ function formatStorage(bytes: number): string {
 }
 
 export default function Home() {
+  const { currentRole, roleInfo, hasPermission, openLockModal } = useRole();
   const [tab, setTab] = useState<Tab>('repository');
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
@@ -100,7 +103,7 @@ export default function Home() {
         </div>
         <div className="topbar-right">
           <span className="live-dot" /> Local vault online
-          <span className="user-avatar">AD</span>
+          <RoleBadge />
         </div>
       </header>
 
@@ -152,12 +155,21 @@ export default function Home() {
 
       {/* ─── Tab navigation ─── */}
       <nav className="tabbar" aria-label="Dashboard sections">
-        {tabs.map(([id, label, hint]) => (
-          <button key={id} className={tab === id ? 'tab active' : 'tab'} onClick={() => setTab(id)}>
-            <span>{label}</span>
-            <small>{hint}</small>
-          </button>
-        ))}
+        {tabs.map(([id, label, hint]) => {
+          const isTabLocked = id === 'upload' && !hasPermission('upload');
+          return (
+            <button
+              key={id}
+              className={`${tab === id ? 'tab active' : 'tab'} ${isTabLocked ? 'tab-locked' : ''}`}
+              onClick={() => setTab(id)}
+            >
+              <span>
+                {label} {isTabLocked && <small className="tab-lock-badge">🔒</small>}
+              </span>
+              <small>{isTabLocked ? 'Restricted (Investigator)' : hint}</small>
+            </button>
+          );
+        })}
       </nav>
 
       {/* ─── Content area ─── */}
@@ -221,7 +233,36 @@ export default function Home() {
         )}
 
         {/* Upload tab */}
-        {tab === 'upload' && <BatchUpload />}
+        {tab === 'upload' &&
+          (hasPermission('upload') ? (
+            <BatchUpload />
+          ) : (
+            <section className="panel locked-tab-panel">
+              <div className="locked-tab-content">
+                <div className="locked-tab-icon">🔒</div>
+                <span className="eyebrow" style={{ color: '#6366f1' }}>
+                  RESTRICTED JURISDICTION
+                </span>
+                <h2>Evidence Ingestion Locked</h2>
+                <p>
+                  Direct evidence registration, batch ingestion, and cryptographic sealing are restricted exclusively to
+                  authorized <strong>Law Enforcement Investigators</strong> to preserve Section 65B statutory
+                  chain-of-custody.
+                </p>
+                <div className="locked-tab-badges">
+                  <span className="pill-badge required">Required Clearance: 🛡️ Investigator (PIN: 1001)</span>
+                  <span className="pill-badge current">Your Active Role: {roleInfo.badge}</span>
+                </div>
+                <button
+                  type="button"
+                  className="button button-primary locked-tab-unlock-btn"
+                  onClick={() => openLockModal('Evidence Ingestion & Batch Upload', 'investigator')}
+                >
+                  🔑 Authenticate as Investigator
+                </button>
+              </div>
+            </section>
+          ))}
 
         {/* Verify tab */}
         {tab === 'verify' && <VerificationDropzone />}

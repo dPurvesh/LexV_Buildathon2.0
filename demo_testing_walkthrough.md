@@ -45,7 +45,64 @@ Verify that the system is actively synchronized with the public Ethereum Sepolia
 
 ---
 
-## Test 2: Dashboard KPI Metrics
+## Test 2: Role-Based Access Control (RBAC) & Persona Switching
+
+### What to Test:
+Verify that all features are visible across all roles, but actions outside a persona's authorized jurisdiction are visually locked and prompt for an authorization PIN.
+
+### Default Persona Credentials:
+- **🛡️ Investigator**: PIN **`1001`** (Ingest evidence, transfer custody, organize cases)
+- **🔬 Forensic Analyst**: PIN **`2002`** (Deep ELA tamper heatmaps, Whisper audio transcripts)
+- **⚖️ Court Auditor**: PIN **`3003`** (Section 65B Court Dossier PDF, Global Ledger CSV export)
+
+### Step-by-Step Actions:
+
+#### A. Verify Initial Persona (Investigator `1001`):
+1. In the topbar header on the right, look at the role pill: **`[ 🛡️ Investigator • 1001 ▾ ]`**.
+2. Click the **Upload** tab: It opens normally with full batch file ingestion capabilities.
+3. Click the **Evidence Vault** tab, and click any row (e.g. `CCTV Bodycam Footage`) to open the inspector drawer.
+4. Observe the action buttons at the bottom of the drawer:
+   - `⚡ Transfer Custody` is active.
+   - `🔒 ELA Heatmap` is marked with a padlock icon (Restricted to Forensic Analyst).
+   - `🔒 Court Dossier (PDF)` is marked with a padlock icon (Restricted to Auditor).
+5. Click the locked **`🔒 ELA Heatmap`** button:
+   - A frosted glass dialog pops up: **"Access Restricted — Error Level Analysis Heatmap requires clearance reserved for Forensic Analyst."**
+   - Shows your active role: `🛡️ Investigator` ➔ Required: `🔬 Forensic Analyst`.
+
+#### B. Switch to Forensic Analyst (`2002`):
+1. In the open dialog, type **`2002`** on your keyboard (or click the quick demo pill **`[ 🔬 Analyst 2002 ]`**).
+2. Click **Unlock** (or press Enter):
+   - The modal closes and the ELA Tamper Heatmap opens immediately!
+   - Look at the topbar: The badge has transformed to **`[ 🔬 Forensic Analyst • 2002 ▾ ]`** in glowing purple.
+3. Now, click on the **Upload** tab in the main navigation:
+   - The tab shows a lock badge: **`Upload 🔒`**.
+   - The content displays the **"Evidence Ingestion Locked"** security notice explaining that raw ingestion is restricted to Law Enforcement Investigators.
+   - In the inspector drawer, `🔒 Transfer Custody` is now locked.
+
+#### C. Switch to Court Auditor (`3003`):
+1. Click the topbar role pill **`[ 🔬 Forensic Analyst • 2002 ▾ ]`**.
+2. Type **`3003`** on your keyboard (or click **`[ ⚖️ Auditor 3003 ]`**).
+3. The topbar updates to **`[ ⚖️ Court Auditor • 3003 ▾ ]`** in emerald green.
+4. In the Evidence Vault table:
+   - **`📥 Export CSV Ledger`** is now unlocked and active!
+   - In the inspector drawer: **`📜 Court Dossier (PDF)`** is now unlocked and active!
+   - Ingestion and Custody handovers remain locked (read-only audit compliance).
+
+### Expected Visual Result:
+- Interactive frosted glass modal with auto-focused PIN input and smooth animations.
+- Dynamic color changes in the topbar pill: Indigo (`1001`) ➔ Purple (`2002`) ➔ Emerald (`3003`).
+- Instant state persistence without page reloads.
+
+### Tech Stack & Why It's Used:
+- **React Context API & localStorage**: Zero-latency role evaluation across all components without network roundtrip lag.
+- **Why**: Proves to the jury that the application enforces institutional security and separation of evidentiary duties, fulfilling Section 65B statutory chain-of-custody mandates.
+
+### Jury Talking Script:
+> *"A frequent criticism of student projects is that 'anyone can click any button and alter records.' In LEXVAULT, we implemented strict Role-Based Access Control with 3 distinct professional personas. An investigator cannot fake an ELA analysis; an analyst cannot tamper with legal custody handovers; and only a certified legal auditor can issue an official Section 65B court certificate. Notice that examiners can type the PIN directly on the keyboard or use the demo shortcuts to test each persona live."*
+
+---
+
+## Test 3: Dashboard KPI Metrics
 
 ### What to Test:
 Verify live aggregation of evidence assets, active case folders, storage consumption, and tamper alerts.
@@ -73,7 +130,7 @@ Verify live aggregation of evidence assets, active case folders, storage consump
 
 ---
 
-## Test 3: Evidence Repository, Case Filtering & Global Ledger CSV
+## Test 4: Evidence Repository, Case Filtering & Global Ledger CSV
 
 ### What to Test:
 Verify data retrieval, pagination, filtering by case identifier, and export of cryptographic audit trails.
@@ -103,7 +160,7 @@ Verify data retrieval, pagination, filtering by case identifier, and export of c
 
 ---
 
-## Test 4: Forensic Inspector Drawer & Blockchain Proof
+## Test 5: Forensic Inspector Drawer & Blockchain Proof
 
 ### What to Test:
 Verify that clicking any evidence item slides open a comprehensive forensic inspection drawer with deep metadata and blockchain explorer links.
@@ -134,7 +191,7 @@ Verify that clicking any evidence item slides open a comprehensive forensic insp
 
 ---
 
-## Test 5: Section 65B Indian Evidence Act Court Dossier (PDF)
+## Test 6: Section 65B Indian Evidence Act Court Dossier (PDF)
 
 ### What to Test:
 Verify automated creation of a legally admissible Chain of Custody certificate conforming to Section 65B of the Indian Evidence Act / BSA 2023.
@@ -171,7 +228,7 @@ Verify automated creation of a legally admissible Chain of Custody certificate c
 
 ---
 
-## Test 6: Interactive Chain of Custody Transfer
+## Test 7: Interactive Chain of Custody Transfer
 
 ### What to Test:
 Verify an unbroken chain of custody transfer from one officer/custodian to another, with smart contract state transition logging.
@@ -209,7 +266,7 @@ Verify an unbroken chain of custody transfer from one officer/custodian to anoth
 
 ---
 
-## Test 7: Error Level Analysis (ELA) Image Tampering Heatmap
+## Test 8: Error Level Analysis (ELA) Image Tampering Heatmap
 
 ### What to Test:
 Verify forensic visual artifact detection using compression difference analysis to expose edited or photoshopped images.
@@ -241,7 +298,7 @@ Verify forensic visual artifact detection using compression difference analysis 
 
 ---
 
-## Test 8: Audio Transcript Player & Synchronized Word Scrubbing
+## Test 9: Audio Transcript Player & Synchronized Word Scrubbing
 
 ### What to Test:
 Verify AI-driven speech-to-text audio forensics with word-level time scrubbing.
@@ -265,7 +322,7 @@ Verify AI-driven speech-to-text audio forensics with word-level time scrubbing.
 
 ---
 
-## Test 9: Case Portfolio Folder Organization
+## Test 10: Case Portfolio Folder Organization
 
 ### What to Test:
 Verify aggregated portfolio view that groups evidence items by legal case dossiers.
@@ -296,7 +353,7 @@ Verify aggregated portfolio view that groups evidence items by legal case dossie
 
 ---
 
-## Test 10: Batch Ingestion, Client Hashing & Deduplication
+## Test 11: Batch Ingestion, Client Hashing & Deduplication
 
 ### What to Test:
 Verify multi-file bulk evidence ingestion with pre-upload cryptographic client hashing and duplicate detection.
@@ -326,7 +383,7 @@ Verify multi-file bulk evidence ingestion with pre-upload cryptographic client h
 
 ---
 
-## Test 11: Cryptographic Verification Dropzone (Authentic vs Tampered)
+## Test 12: Cryptographic Verification Dropzone (Authentic vs Tampered)
 
 ### What to Test:
 Verify the ultimate forensic test: proving whether a file matches the legal vault and blockchain record or has been modified by even a single byte.
@@ -363,7 +420,7 @@ Verify the ultimate forensic test: proving whether a file matches the legal vaul
 
 ---
 
-## Test 12: Hybrid Semantic AI Search
+## Test 13: Hybrid Semantic AI Search
 
 ### What to Test:
 Verify multimodal semantic search combining traditional keyword matching with OpenAI CLIP high-dimensional vector similarity.

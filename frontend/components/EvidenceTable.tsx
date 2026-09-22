@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRole } from '../context/RoleContext';
 
 type EvidenceItem = {
   id: string;
@@ -49,6 +50,7 @@ export default function EvidenceTable({
   onInspect: (id: string) => void;
   caseFilter?: string;
 }) {
+  const { hasPermission, openLockModal } = useRole();
   const [data, setData] = useState<ListResponse | null>(null);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState('created_at');
@@ -89,6 +91,14 @@ export default function EvidenceTable({
 
   const sortIcon = (col: string) => (sort === col ? (order === 'asc' ? ' ↑' : ' ↓') : '');
 
+  const triggerExport = () => {
+    const params = new URLSearchParams({
+      ...(caseSearch ? { case_filter: caseSearch } : {}),
+      ...(tamperOnly ? { tamper_only: 'true' } : {}),
+    });
+    window.open(`${API_BASE}/api/v1/evidence/export-csv?${params}`, '_blank');
+  };
+
   return (
     <section className="panel evidence-table-panel">
       <div className="section-heading">
@@ -120,20 +130,27 @@ export default function EvidenceTable({
           />
           <span>Tamper alerts only</span>
         </label>
-        <button
-          type="button"
-          className="button button-secondary export-csv-btn"
-          onClick={() => {
-            const params = new URLSearchParams({
-              ...(caseSearch ? { case_filter: caseSearch } : {}),
-              ...(tamperOnly ? { tamper_only: 'true' } : {}),
-            });
-            window.open(`${API_BASE}/api/v1/evidence/export-csv?${params}`, '_blank');
-          }}
-          title="Export court-audited CSV ledger of current repository evidence"
-        >
-          📥 Export CSV Ledger
-        </button>
+        {hasPermission('export_csv') ? (
+          <button
+            type="button"
+            className="button button-secondary export-csv-btn"
+            onClick={triggerExport}
+            title="Export court-audited CSV ledger of current repository evidence"
+          >
+            📥 Export CSV Ledger
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="button button-secondary export-csv-btn locked-action-btn"
+            onClick={() =>
+              openLockModal('Global Cryptographic Ledger Audit Export (CSV)', 'auditor', triggerExport)
+            }
+            title="Restricted: Requires Compliance Auditor clearance (PIN 3003)"
+          >
+            🔒 Export CSV (Auditor)
+          </button>
+        )}
       </div>
 
       {loading && !data ? (

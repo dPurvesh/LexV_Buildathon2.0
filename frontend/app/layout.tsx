@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TelemetryBar from "../components/TelemetryBar";
+import { RoleProvider } from "../context/RoleContext";
+import RoleLockModal from "../components/RoleLockModal";
 
 export const metadata: Metadata = {
   title: "LEXVAULT | Digital Forensics Command Center",
@@ -20,7 +22,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body><TelemetryBar />{children}</body>
+      <body>
+        <RoleProvider>
+          <TelemetryBar />
+          {children}
+          <RoleLockModal />
+        </RoleProvider>
+      </body>
     </html>
   );
 }
