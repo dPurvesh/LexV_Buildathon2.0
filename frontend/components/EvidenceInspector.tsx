@@ -54,6 +54,7 @@ export default function EvidenceInspector({
   evidenceId: string;
   onClose: () => void;
 }) {
+  const { hasPermission, openLockModal } = useRole();
   const [evidence, setEvidence] = useState<EvidenceDetail | null>(null);
   const [custody, setCustody] = useState<CustodyEntry[]>([]);
   const [loading, setLoading] = useState(true);
