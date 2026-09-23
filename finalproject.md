@@ -11,9 +11,15 @@ LEXVAULT combines:
 1. **Client-side & Server-side Cryptographic Dual-Hashing** (SHA-256 & Perceptual Hashing)
 2. **Immutable WORM (Write-Once-Read-Many) Storage Vault** with 365-day compliance locks
 3. **Public Blockchain Anchoring** on the Ethereum Sepolia testnet for immutable timestamping and custody transition logs
-4. **Multimodal Forensic AI Processing** (OpenCV Error Level Analysis, faster-whisper speech-to-text, and OpenAI CLIP vector embeddings)
-5. **Section 65B Indian Evidence Act Court Dossier Generator** producing cryptographically verified PDF certificates with dynamic verification QR codes
-6. **Handcrafted Glassmorphism Command Center** designed with modern typography (Inter + Fira Code), dynamic blurred frosted panels, and responsive status telemetry.
+4. **Deep Multi-Modal Forensic Tamper Engine**:
+   - **Perceptual Hash Matching (pHash)**: 64-bit DCT perceptual hashing capable of identifying modified/cropped/spliced derivatives even when the cryptographic SHA-256 has completely diverged.
+   - **Interactive Split Slider**: Real-time canvas overlay comparing original clean vault evidence against modified uploads.
+   - **Pixel Difference Heatmaps**: Direct pixel delta highlighting exact spliced regions.
+   - **Error Level Analysis (ELA)**: OpenCV compression disparity analysis detecting JPEG resave artifacts and clone stamping.
+   - **PDF Document Text Diff**: Textual sequence alignment (`difflib`) highlighting additions in green and deletions in red.
+5. **Pre-Ingestion Tamper Screening**: Warns investigators before vault entry if a file is an altered derivative of existing evidence, flagging it as `is_tampered = TRUE` and alerting the dashboard.
+6. **Section 65B Indian Evidence Act Court Dossier Generator** producing cryptographically verified PDF certificates with dynamic verification QR codes.
+7. **Handcrafted Glassmorphism Command Center** designed with modern typography (Inter + Fira Code), dynamic blurred frosted panels, and responsive status telemetry.
 
 ---
 
@@ -24,9 +30,10 @@ LEXVAULT combines:
 |                                    LEXVAULT CLIENT (Browser)                                    |
 |   Next.js 15 + React 19 + TypeScript + Custom Glassmorphic CSS (Tokens, Backdrop Filter, Blur)   |
 |   Web Crypto API (In-Browser SHA-256 Digest Calculation before any network transmission)         |
+|   Interactive Split Slider & 3-Way Side-by-Side Forensic Image Comparison Inspector              |
 +--------------------------------------------------------------------------------------------------+
                                                  |
-                                     HTTP REST / CORS Port 3001
+                                     HTTP REST / Port 3000 (Docker) / 3001 (Dev)
                                                  v
 +--------------------------------------------------------------------------------------------------+
 |                                  FASTAPI APPLICATION GATEWAY                                     |
@@ -36,11 +43,11 @@ LEXVAULT combines:
          |                              |                              |                       |
          v                              v                              v                       v
 +------------------+          +------------------+          +--------------------+  +------------------+
-| PostgreSQL 16    |          | MinIO WORM       |          | Ethereum Sepolia   |  | Asynchronous     |
-| + pgvector       |          | S3 Object Vault  |          | Smart Contract     |  | AI Worker        |
-| Relational data, |          | 365-Day Retention|          | Immutable Proof of |  | ELA Heatmap,     |
-| custody logs,    |          | Compliance Lock, |          | Existence & State  |  | pHash, Whisper,  |
-| 512-dim vectors  |          | Zero Overwrites  |          | Transitions        |  | CLIP Embeddings  |
+| PostgreSQL 16    |          | MinIO WORM       |          | Ethereum Sepolia   |  | Multi-Modal      |
+| + pgvector       |          | S3 Object Vault  |          | Smart Contract     |  | Forensic Engine  |
+| Relational data, |          | 365-Day Retention|          | Immutable Proof of |  | pHash Matching,  |
+| custody logs,    |          | Compliance Lock, |          | Existence & State  |  | Pixel Diff, ELA, |
+| 512-dim vectors  |          | Zero Overwrites  |          | Transitions        |  | Whisper, CLIP    |
 +------------------+          +------------------+          +--------------------+  +------------------+
          ^                                                                                     |
          +-------------------------------------------------------------------------------------+
@@ -51,16 +58,17 @@ LEXVAULT combines:
 
 1. **Client Ingestion**: An investigator selects or drops an evidence file into the browser.
 2. **Pre-Upload Cryptographic Fingerprint**: The browser's native `window.crypto.subtle` API computes the raw SHA-256 hexadecimal hash client-side before upload.
-3. **Streaming Ingestion**: The file is streamed via multipart form data to FastAPI (`/api/v1/evidence/upload`). As byte chunks stream into the backend, an internal `HashingStream` simultaneously computes the server-side SHA-256 digest without loading the entire payload into RAM.
-4. **Integrity Validation**: FastAPI compares the client-claimed digest with the server-computed digest. Any mismatch immediately aborts the transaction (HTTP 400).
-5. **WORM Vault Lock**: The stream is saved to MinIO in the `evidence-vault` bucket configured with Object Lock in `COMPLIANCE` mode for 365 days. Files cannot be deleted, renamed, or modified—even by root administrators.
-6. **Blockchain Registration**: The SHA-256 hash, title, and custodian identifier are submitted via Web3.py to the `EvidenceLedger` smart contract deployed on the Ethereum Sepolia testnet. The resulting transaction hash and block number are recorded.
-7. **Database Persistence**: Metadata, file size, MIME type, hashes, custody state, and Ethereum receipt are stored in PostgreSQL 16.
-8. **Initial Custody Log**: An inaugural record (`INITIAL_INGESTION`) is created in `custody_history`.
-9. **Asynchronous Multimodal AI Worker**:
-   - **For Images**: Computes 64-bit Perceptual Hash (pHash) and generates Error Level Analysis (ELA) compression difference heatmaps using OpenCV.
-   - **For Audio/Video**: Extracts audio tracks via FFmpeg and runs `faster-whisper` (CTranslate2) to extract word-level timestamped transcripts.
-   - **Semantic Embeddings**: Generates 512-dimensional multimodal vector embeddings using CLIP (`openai/clip-vit-base-patch32`) and indexes them in PostgreSQL with `pgvector` IVFFlat indexing.
+3. **Pre-Ingestion Tamper Screening**: For images and PDFs, the client and server check perceptual fingerprints against registered vault evidence. If a derivative is detected, a warning chip alerts the user.
+4. **Streaming Ingestion**: The file is streamed via multipart form data to FastAPI (`/api/v1/evidence/upload`). An internal `HashingStream` simultaneously computes the server-side SHA-256 digest without loading the entire payload into RAM.
+5. **Integrity Validation**: FastAPI compares the client-claimed digest with the server-computed digest. Any mismatch immediately aborts the transaction (HTTP 400).
+6. **WORM Vault Lock**: The stream is saved to MinIO in the `evidence-vault` bucket configured with Object Lock in `COMPLIANCE` mode for 365 days. Files cannot be deleted, renamed, or modified—even by root administrators.
+7. **Blockchain Registration**: The SHA-256 hash, title, and custodian identifier are submitted via Web3.py to the `EvidenceLedger` smart contract deployed on the Ethereum Sepolia testnet. If already registered, it reuses the on-chain anchor gracefully.
+8. **Database Persistence**: Metadata, file size, MIME type, hashes, custody state, tamper status, and Ethereum receipt are stored in PostgreSQL 16.
+9. **Initial Custody Log**: An inaugural record (`INITIAL_INGESTION` or `INTAKE_TAMPER_FLAGGED`) is created in `custody_history`.
+10. **Asynchronous Multimodal AI Worker**:
+    - **For Images**: Computes 64-bit Perceptual Hash (pHash) and generates Error Level Analysis (ELA) compression difference heatmaps using OpenCV.
+    - **For Audio/Video**: Extracts audio tracks via FFmpeg and runs `faster-whisper` (CTranslate2) to extract word-level timestamped transcripts.
+    - **Semantic Embeddings**: Generates 512-dimensional multimodal vector embeddings using CLIP (`openai/clip-vit-base-patch32`) and indexes them in PostgreSQL with `pgvector` IVFFlat indexing.
 
 ---
 
@@ -79,11 +87,13 @@ LEXVAULT combines:
 | **Object Storage** | MinIO | S3 API | Self-hosted S3-compatible storage with SEC Rule 17a-4 compliant WORM (Write-Once-Read-Many) Object Lock and Retention. |
 | **Blockchain** | Ethereum (Sepolia) | EVM | Public decentralized ledger anchoring evidence hashes; provides mathematically irrefutable proof-of-existence and non-repudiation. |
 | **Web3 Client** | Web3.py | 7.x | Python library for interacting with the Sepolia RPC node, compiling contract ABIs, signing raw transactions, and tracking block confirmations. |
-| **Image Forensics** | OpenCV & Pillow | 4.10+ / 10.4+ | Error Level Analysis (ELA) resave differential calculations, JET colormap generation, and 64-bit pHash perceptual fingerprinting. |
+| **Perceptual Hashing** | imagehash (DCT) | 4.3+ | 64-bit Discrete Cosine Transform perceptual hashing for detecting modified derivatives via Hamming bit distance. |
+| **Image Forensics** | OpenCV & Pillow | 4.10+ / 10.4+ | Error Level Analysis (ELA) resave differential calculations, pixel diff heatmaps, and JET false-color mapping. |
+| **Document Forensics** | pypdf & difflib | 5.0+ | Text extraction and line-by-line sequence differential analysis for altered PDF contracts and affidavits. |
 | **Audio Transcription** | faster-whisper | 1.0+ | Fast CTranslate2-accelerated implementation of OpenAI's Whisper model; extracts exact word-by-word timestamped forensic transcripts. |
 | **Multimodal Vector AI** | HuggingFace Transformers & PyTorch | 4.44+ | Runs CLIP (`ViT-B/32`) to convert both text search queries and evidence visual contents into a unified 512-dimensional semantic vector space. |
 | **Court Dossier PDF** | ReportLab | 4.2+ | Generates Section 65B Indian Evidence Act compliant legal certificates with dynamic embedded QR codes, watermarks, and cryptographic audit tables. |
-| **Containerization** | Docker & Docker Compose | 3.8+ | Fully reproducible multi-container deployment: database, MinIO vault, MinIO initialization client, and FastAPI backend. |
+| **Containerization** | Docker & Docker Compose | 3.8+ | Fully reproducible multi-container deployment: database, MinIO vault, MinIO initialization client, frontend, and FastAPI backend. |
 
 ---
 
@@ -150,8 +160,8 @@ CREATE TABLE evidence_ai_index (
 ## 5. API Endpoints Catalog
 
 ### Evidence Management (`/api/v1/evidence`)
-- `POST /upload`: Multipart upload with client SHA-256 verification, MinIO WORM storage, Sepolia anchoring, and DB entry.
-- `POST /verify`: Uploads any file to re-calculate SHA-256 and checks against PostgreSQL and Sepolia contract.
+- `POST /upload`: Multipart upload with client SHA-256 verification, pre-ingestion derivative screening, MinIO WORM storage, Sepolia anchoring, and DB entry.
+- `POST /verify`: Deep multi-modal verification supporting binary file upload or SHA-256 JSON body. Executes exact cryptographic matching, perceptual hash comparison (pHash Hamming distance $\le 15$), Error Level Analysis (ELA) heatmap generation, direct visual pixel diffing (`diff_heatmap_b64`), PDF text diffing (`difflib`), and detection of registered records flagged as tampered.
 - `GET /list`: Paginated evidence listing with search filter, case filter, and tamper indicators.
 - `GET /{evidence_id}/detail`: Complete evidentiary record including on-chain transaction hash and perceptual hash.
 - `POST /{evidence_id}/custody`: Executes a legal custody transfer, recording a new custody event and optional blockchain transition.
@@ -173,6 +183,10 @@ CREATE TABLE evidence_ai_index (
 
 ### Blockchain Telemetry (`/api/v1/blockchain`)
 - `GET /status`: Live status of Ethereum Sepolia connection, Chain ID (`11155111`), latest block number, and relayer wallet balance.
+
+### Maintenance Utilities (`backend/scripts`)
+- `python scripts/purge_all.py`: Complete teardown and clean slate reset of all evidence records in PostgreSQL, MinIO S3 object buckets, and custody histories.
+- `python scripts/delete_evidence.py --id <uuid>`: Targeted removal of specific test records during forensic laboratory calibration.
 
 ---
 
@@ -223,7 +237,7 @@ Adheres to international guidelines for digital evidence collection and preserva
 
 ## 8. Current Network & Environment Ports
 
-- **Frontend Application**: `http://localhost:3001` (Next.js 15 dev server)
+- **Frontend Application**: `http://localhost:3000` (Docker default) / `http://localhost:3001` (local dev server)
 - **Backend REST Gateway**: `http://localhost:8000` (FastAPI + Uvicorn)
 - **PostgreSQL Database**: `localhost:5432` (`forensic_admin` / `secure_password` / `evidence_db`)
 - **MinIO Object Vault Console**: `http://localhost:9001` (`minio_admin` / `minio_secure_password`)

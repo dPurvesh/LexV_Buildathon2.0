@@ -2,7 +2,7 @@
 
 import { DragEvent, FormEvent, useRef, useState } from 'react';
 
-type FileStatus = 'queued' | 'hashing' | 'checking' | 'duplicate' | 'uploading' | 'anchored' | 'error';
+type FileStatus = 'queued' | 'hashing' | 'checking' | 'duplicate' | 'tampered' | 'uploading' | 'anchored' | 'error';
 
 type BatchFile = {
   file: File;
@@ -10,6 +10,9 @@ type BatchFile = {
   hash: string;
   progress: number;
   error: string;
+  isTampered?: boolean;
+  matchedTitle?: string;
+  similarityPct?: number;
   result?: { minio_object_key: string; eth_tx_hash: string };
 };
 
@@ -36,8 +39,9 @@ function mimeIcon(type: string): string {
 const STATUS_LABELS: Record<FileStatus, string> = {
   queued: 'Queued',
   hashing: 'Hashing SHA-256…',
-  checking: 'Checking duplicate…',
+  checking: 'Forensic Pre-Check…',
   duplicate: 'Duplicate detected',
+  tampered: '⚠ Tampered Derivative',
   uploading: 'Uploading…',
   anchored: '✓ Anchored',
   error: 'Failed',
@@ -86,24 +90,46 @@ export default function BatchUpload() {
       if (entry.status === 'anchored' || entry.status === 'duplicate') continue;
 
       try {
-        // Hash
+        // 1. Hash locally
         updateFile(i, { status: 'hashing', progress: 0, error: '' });
         const hash = await sha256(entry.file);
         updateFile(i, { hash, status: 'checking' });
 
-        // Check duplicate
+        // 2. Perform deep forensic pre-check via Verify API
+        const vForm = new FormData();
+        vForm.append('file', entry.file);
         const verifyRes = await fetch(`${API_BASE}/api/v1/evidence/verify`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sha256_hash: hash }),
+          body: vForm,
         });
         const verifyData = await verifyRes.json();
+
+        // Exact hash duplicate check
         if (verifyData.verified) {
           updateFile(i, { status: 'duplicate' });
           continue;
         }
 
-        // Upload
+        // Tampered derivative check (pHash or PDF text matches existing record)
+        let isTamperedFlag = false;
+        let matchedTitle = '';
+        let similarityPct = 0;
+
+        if (verifyData.match_found) {
+          isTamperedFlag = true;
+          matchedTitle = verifyData.matched_evidence?.title ?? 'Existing evidence';
+          similarityPct = verifyData.matched_evidence?.similarity_pct ?? 0;
+          updateFile(i, {
+            status: 'tampered',
+            isTampered: true,
+            matchedTitle,
+            similarityPct,
+          });
+          // Brief pause so investigator sees the tamper detection flag
+          await new Promise((r) => setTimeout(r, 800));
+        }
+
+        // 3. Upload and anchor to vault and Ethereum
         updateFile(i, { status: 'uploading' });
         const title = entry.file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
         const form = new FormData();
@@ -130,6 +156,9 @@ export default function BatchUpload() {
         const result = JSON.parse(uploadResult);
         updateFile(i, {
           status: 'anchored',
+          isTampered: isTamperedFlag || result.is_tampered,
+          matchedTitle: isTamperedFlag ? matchedTitle : undefined,
+          similarityPct: isTamperedFlag ? similarityPct : undefined,
           progress: 100,
           result: { minio_object_key: result.minio_object_key, eth_tx_hash: result.eth_tx_hash },
         });
@@ -143,7 +172,7 @@ export default function BatchUpload() {
 
   const completed = files.filter((f) => f.status === 'anchored' || f.status === 'duplicate').length;
   const totalProgress = files.length ? Math.round((completed / files.length) * 100) : 0;
-  const queuedCount = files.filter((f) => f.status === 'queued').length;
+  const queuedCount = files.filter((f) => f.status === 'queued' || f.status === 'tampered').length;
 
   return (
     <section className="panel batch-upload-panel">
@@ -152,11 +181,12 @@ export default function BatchUpload() {
           <span className="eyebrow">BATCH EVIDENCE INGESTION</span>
           <h2>Preserve &amp; Cryptographically Anchor Evidence</h2>
           <p className="batch-subtitle">
-            Upload multiple files at once with client-side SHA-256 pre-checks, MinIO WORM storage, and on-chain ledger registration.
+            Upload multiple files at once with client-side SHA-256 pre-checks, multi-modal tamper detection, MinIO WORM storage, and on-chain ledger registration.
           </p>
         </div>
         <div className="batch-badges">
           <span className="status-chip">🔒 SHA-256 PRE-CHECK</span>
+          <span className="status-chip">🔬 FORENSIC TAMPER AUDIT</span>
           <span className="status-chip">⛓️ SEPOLIA ANCHOR</span>
         </div>
       </div>
@@ -252,18 +282,25 @@ export default function BatchUpload() {
 
             <div className="file-queue-list">
               {files.map((entry, i) => (
-                <div className={`file-queue-item file-status-${entry.status}`} key={i}>
+                <div className={`file-queue-item file-status-${entry.isTampered ? 'tampered' : entry.status}`} key={i}>
                   <span className="fq-icon">{mimeIcon(entry.file.type)}</span>
                   <div className="fq-info">
                     <strong title={entry.file.name}>{entry.file.name}</strong>
                     <div className="fq-meta">
                       <span>{formatSize(entry.file.size)}</span>
                       {entry.hash && <code className="fq-hash">SHA: {entry.hash.slice(0, 16)}…</code>}
+                      {entry.matchedTitle && (
+                        <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                          ⚠ Derivative of &quot;{entry.matchedTitle}&quot; ({entry.similarityPct}%)
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="fq-status">
-                    <span className={`file-status-label status-${entry.status}`}>
-                      {STATUS_LABELS[entry.status]}
+                    <span className={`file-status-label status-${entry.isTampered && entry.status === 'anchored' ? 'tampered' : entry.status}`}>
+                      {entry.isTampered && entry.status === 'anchored'
+                        ? '⚠ Anchored (Tamper Alert)'
+                        : STATUS_LABELS[entry.status]}
                     </span>
                     {entry.status === 'uploading' && (
                       <div className="fq-progress-bar">

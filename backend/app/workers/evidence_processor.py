@@ -75,7 +75,13 @@ def _persist_results(
         with connection.cursor() as cursor:
             if report:
                 cursor.execute(
-                    "UPDATE evidence SET phash = %s, is_tampered = %s, tamper_score = %s WHERE id = %s",
+                    """
+                    UPDATE evidence
+                    SET phash = COALESCE(phash, %s),
+                        is_tampered = (is_tampered OR %s),
+                        tamper_score = GREATEST(tamper_score, %s)
+                    WHERE id = %s
+                    """,
                     (report["phash"], report["is_tampered"], report["tamper_score"], evidence_id),
                 )
             if exif_data:
@@ -88,6 +94,10 @@ def _persist_results(
                     """
                     INSERT INTO evidence_ai_index (evidence_id, transcript, embedding, transcript_words)
                     VALUES (%s, %s, %s::vector, %s::jsonb)
+                    ON CONFLICT (evidence_id) DO UPDATE SET
+                        transcript = EXCLUDED.transcript,
+                        embedding = EXCLUDED.embedding,
+                        transcript_words = EXCLUDED.transcript_words
                     """,
                     (
                         evidence_id,
@@ -130,6 +140,22 @@ def process_evidence_ai(evidence_id: str, object_key: str) -> None:
             report = analyze_image(media_path)
             embedding = embed_image(media_path)
             exif_data = _extract_exif(media_path)
+            # OCR: Extract any visible text from the image using Tesseract
+            try:
+                import pytesseract
+                ocr_text = pytesseract.image_to_string(
+                    PILImage.open(media_path),
+                    lang="eng",
+                    config="--psm 3",  # Fully automatic page segmentation
+                ).strip()
+                if ocr_text and len(ocr_text) >= 3:
+                    transcript = ocr_text
+                    # If CLIP visual embedding already exists, keep it (richer signal).
+                    # Only fall back to text embedding when CLIP failed.
+                    if embedding is None:
+                        embedding = embed_text(ocr_text[:1000])
+            except Exception:
+                pass  # OCR is best-effort; don't block the pipeline
         elif mime_type.startswith("video/"):
             frames = extract_video_frames(media_path, directory)
             if frames:
@@ -146,6 +172,24 @@ def process_evidence_ai(evidence_id: str, object_key: str) -> None:
             transcript_words = transcript_result.get("words")
             if transcript:
                 embedding = embed_text(transcript)
+        elif mime_type == "application/pdf":
+            # PDF: Extract text from all pages using pypdf
+            try:
+                from pypdf import PdfReader
+                reader = PdfReader(media_path)
+                pages_text: list[str] = []
+                for page in reader.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        pages_text.append(page_text.strip())
+                full_text = "\n\n".join(pages_text).strip()
+                if full_text and len(full_text) >= 3:
+                    transcript = full_text
+                    # Generate CLIP embedding from extracted text for semantic search
+                    # Truncate to first 1000 chars (CLIP text encoder limit)
+                    embedding = embed_text(full_text[:1000])
+            except Exception:
+                pass  # PDF extraction is best-effort
 
         if report or transcript is not None or embedding is not None:
             _persist_results(

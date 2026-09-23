@@ -92,8 +92,36 @@ def register_evidence_on_chain(
     web3 = _web3()
     contract = _contract(web3)
     account = _account(web3)
+
+    # Check if already immutably registered on-chain
+    h_bytes = _hash_bytes32(web3, evidence_hash)
+    try:
+        exists, current_custodian, registered_at = contract.functions.verifyEvidence(h_bytes).call()
+        if exists:
+            # Evidence hash is already permanently registered on Ethereum Sepolia
+            tx_hex = f"0x{evidence_hash}"
+            try:
+                latest = web3.eth.block_number
+                logs = contract.events.EvidenceRegistered.get_logs(
+                    from_block=max(0, latest - 50000),
+                    argument_filters={"evidenceHash": h_bytes},
+                )
+                if logs:
+                    tx_hex = web3.to_hex(logs[0]["transactionHash"])
+            except Exception:
+                pass
+            return {
+                "tx_hash": tx_hex,
+                "block_number": web3.eth.block_number,
+                "already_registered": True,
+                "registered_at": registered_at,
+                "current_custodian": current_custodian,
+            }
+    except Exception:
+        pass
+
     tx = contract.functions.registerEvidence(
-        _hash_bytes32(web3, evidence_hash),
+        h_bytes,
         web3.to_checksum_address(initial_custodian),
         storage_uri,
     ).build_transaction(

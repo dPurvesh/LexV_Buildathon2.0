@@ -8,7 +8,7 @@ This guide provides an exact, line-by-line manual testing procedure to verify ev
 ## Pre-Requisite: Environment Verification
 
 Before beginning manual testing, ensure the local services are accessible:
-1. Open your web browser and navigate to: **`http://localhost:3001`**
+1. Open your web browser and navigate to: **`http://localhost:3000`** (or `http://localhost:3001` if running local standalone dev)
 2. Ensure the backend container is running on: **`http://localhost:8000/health`** (returns `{"status": "ok"}`)
 3. Ensure MinIO Object Vault console is up on: **`http://localhost:9001`**
 
@@ -353,10 +353,10 @@ Verify aggregated portfolio view that groups evidence items by legal case dossie
 
 ---
 
-## Test 11: Batch Ingestion, Client Hashing & Deduplication
+## Test 11: Batch Ingestion, Client Hashing & Pre-Upload Tamper Screening
 
 ### What to Test:
-Verify multi-file bulk evidence ingestion with pre-upload cryptographic client hashing and duplicate detection.
+Verify multi-file bulk evidence ingestion with pre-upload cryptographic client hashing, intelligent tamper screening, and automated forensic flagging.
 
 ### Step-by-Step Actions:
 1. Click the third tab in the navigation: **`Batch Ingestion`**.
@@ -364,59 +364,98 @@ Verify multi-file bulk evidence ingestion with pre-upload cryptographic client h
 3. Form Inputs:
    - **Case Number**: Enter `CASE-DEMO-2026`
    - **Default Custodian**: Enter `Investigator Miller #4401`
-4. Select 1 or 2 small sample files from your computer (images or text files).
+4. Select or drop evidence files (e.g., an authentic crime scene image or document).
 5. Notice the **Pre-Upload Verification status**: The browser immediately calculates each file's SHA-256 hash *before* uploading.
-6. Click **`Ingest All Evidence to Vault`**.
-7. Watch the progress bars fill up.
+6. **Tampered Derivative Ingestion Test**: Drop an altered or photoshopped version of an evidence file already in the vault.
+   - The system performs real-time pre-screening against vault perceptual hashes.
+   - If a derivative is detected, a warning chip alerts: **`⚠ Pre-Screen Alert: Tampered derivative detected`**.
+7. Click **`Ingest All Evidence to Vault`**.
+8. Watch the progress bars fill up.
 
 ### Expected Visual Result:
 - Status chips transition: `Calculating Hash` ➔ `Hash Verified` ➔ `Uploading to Vault` ➔ `Anchored on Sepolia`.
 - A green checkmark badge confirms successful WORM retention and on-chain registration.
+- If a tampered file was ingested, the backend automatically flags it with `is_tampered = TRUE`, records an anomaly score (`tamper_score`), logs `INTAKE_TAMPER_FLAGGED` in the custody timeline, and increments the Dashboard **Tamper Alerts** KPI!
 
 ### Under the Hood / API:
 - In-Browser Hashing: Native `crypto.subtle.digest('SHA-256', buffer)`
 - Upload Endpoint: `POST /api/v1/evidence/upload`
 - Dual verification: Server-side `HashingStream` compares bytes on arrival against the client digest.
+- Perceptual Hash Screening: Computes 64-bit DCT pHash and checks Hamming distance $\le 15$ against existing vault images.
+- Graceful Sepolia Anchoring: Reuses existing on-chain proof if hash is already registered, preventing contract revert errors.
 
 ### Tech Stack & Why It's Used:
-- **Web Crypto API (SubtleCrypto)**: Zero-dependency, hardware-accelerated cryptographic hashing in the browser sandbox. Guarantees that corrupted or intercepted network packets are rejected before entering storage.
+- **Web Crypto API (SubtleCrypto) & Perceptual Hashing**: Guarantees that corrupted or intercepted network packets are rejected, while actively screening for counterfeit or modified derivatives of existing evidence before or upon vault entry.
 
 ---
 
-## Test 12: Cryptographic Verification Dropzone (Authentic vs Tampered)
+## Test 12: Deep Multi-Modal Forensic Verification (Authentic, Tampered & Derivatives)
 
 ### What to Test:
-Verify the ultimate forensic test: proving whether a file matches the legal vault and blockchain record or has been modified by even a single byte.
+Verify the ultimate forensic integrity engine: proving whether a file matches the legal vault and blockchain record, exposes modified derivatives of registered evidence, or flags compromised records stored in the ledger.
 
-### Step-by-Step Actions (Authentic Test):
-1. Click the fourth tab: **`Verification Dropzone`**.
-2. Drop any file that was previously uploaded into the system.
-3. Watch the verification check execute.
+### Step-by-Step Actions & Expected Results:
 
-### Expected Visual Result (Authentic):
-- A glowing green card appears: **`AUTHENTIC EVIDENCE VERIFIED`**.
-- Displays:
-  - Calculated SHA-256 matching the database record
-  - On-Chain Status: **`CONFIRMED ON SEPOLIA`**
-  - Ethereum Block Number and Transaction Link
-  - Custodian & Timestamp confirmation
+#### Scenario A: Verifying an Authentic Vault Record
+1. Click the fourth tab: **`Verification Dropzone`** (or `Verify`).
+2. Drop any pristine, unaltered file that exists in the vault (e.g. `crime-scene-clean-up.jpg`).
+3. **Expected Visual Result**:
+   - Glowing emerald green card: **`AUTHENTIC & CRYPTOGRAPHICALLY VERIFIED`**.
+   - Displays registered timestamp, current custodian address, Ethereum block number, and direct link to Sepolia Etherscan transaction.
 
-### Step-by-Step Actions (Tampered / Unknown File Test):
-1. Drop any random un-ingested file, or open an uploaded text file, add one single character/space, and drop it.
-2. Observe the verification result.
+#### Scenario B: Verifying a Registered Vault Record Flagged as Tampered
+1. Drop a file that was ingested into the vault but flagged as tampered (e.g. `ChatGPT Image Sep 23, 2026, 03_29_18 AM.png`).
+2. **Expected Visual Result**:
+   - Distinct glowing red alert card: **`⚠ REGISTERED VAULT RECORD — FLAGGED AS TAMPERED`**.
+   - Status Pills:
+     - **Integrity Status**: `FLAGGED TAMPERED` (Bright red)
+     - **Tamper Anomaly**: `100.0%`
+     - **Original Vault Record**: `100% Match`
+   - **Integrity Diagnostic**: Explains that the cryptographic hash matches the registered intake record, but it was flagged as compromised during forensic screening.
+   - **Root Evidence Link**: Identifies the clean original record (*`crime scene clean up`*).
+   - **Ledger Facts**: Displays blockchain registration, block, and custodian details.
+   - **Multi-Modal Controls**: Loads the Interactive Split Slider and ELA Heatmap immediately!
 
-### Expected Visual Result (Tampered / Unknown):
-- A glowing red/amber warning card appears: **`INTEGRITY CHECK: UNREGISTERED / TAMPERED`**.
-- Message: `Cryptographic SHA-256 digest does not match any registered vault record or smart contract anchor.`
+#### Scenario C: Verifying an Unregistered Tampered Derivative (Modified Copy)
+1. Modify a local image (e.g., crop it, paint an object over it, or add text) WITHOUT uploading it, and drop it into the dropzone.
+2. **Expected Visual Result**:
+   - Red warning card: **`⚠ TAMPERED / MODIFIED EVIDENCE DETECTED`**.
+   - Displays matched vault record title, case number, **Visual / Content Match %** (e.g., `92.4%`), and **Hamming Distance** (e.g., `4/64 bits`).
+   - Four interactive forensic comparison tabs appear:
+     1. **⟷ Interactive Slider**: Drag the split-screen handle left and right to inspect the original vault image vs. the uploaded altered image in real time. Also supports "Uploaded vs ELA Heatmap" mode!
+     2. **⊞ Side-by-Side Comparison**: Shows 3 cards side-by-side:
+        - Original Evidence (Vault) with green `REGISTERED` badge
+        - Uploaded File (Tampered) with red `ALTERED` badge
+        - Pixel Difference Heatmap highlighting changed pixels in bright red
+     3. **🔬 ELA Compression Heatmap**: Color-coded JET colormap exposing compression error disparities and spliced boundaries (Blue = Low, Green = Normal, Yellow = Suspicious, Red = High Anomaly).
+     4. **# Perceptual Hash Details**: Exact DCT 64-bit perceptual hash comparison table with bit distance.
+
+#### Scenario D: Verifying an Altered PDF Document (Text Diff Analysis)
+1. Open a registered legal PDF document, edit/add/delete a sentence, and drop the modified PDF into the dropzone.
+2. **Expected Visual Result**:
+   - Detects the document match via textual sequence alignment (`difflib`).
+   - Displays: **`Document text match identified (XX% textual similarity)`**.
+   - **Text Diff Viewer**: Renders added lines in green (`+ Added line`) and deleted lines in red (`- Removed line`), pinpointing exact textual alterations.
+
+#### Scenario E: Verifying an Unregistered, Completely Unknown File
+1. Drop a completely unrelated random file.
+2. **Expected Visual Result**:
+   - Glowing crimson breach card: **`UNREGISTERED EVIDENCE / UNKNOWN DIGEST`**.
+   - Explains that neither the SHA-256 hash nor perceptual fingerprint matches any vault record.
+   - For images, still renders a standalone ELA compression heatmap for anomaly inspection.
 
 ### Under the Hood / API:
-- Endpoint: `POST /api/v1/evidence/verify`
-- Server queries:
-  1. PostgreSQL for matching `sha256_hash`.
-  2. Smart contract `verify_evidence_on_chain(sha256_hash)`.
+- Endpoint: `POST /api/v1/evidence/verify` (accepts multipart file or JSON hash)
+- Cryptographic Engine:
+  - Exact SHA-256 lookup in PostgreSQL `evidence` table.
+  - Smart contract query `verify_evidence_on_chain(sha256_hash)`.
+  - Image pHash Hamming Distance: `imagehash.phash()` with DCT 64-bit binary comparison.
+  - Visual Diff Heatmap: Computes absolute pixel differences and highlights altered bounding regions.
+  - Error Level Analysis (ELA): Computes 95% JPEG recompression error delta and color-maps anomalies.
+  - PDF Text Extraction & Diff: Extracts text streams via `pypdf` and executes unified diff sequencing.
 
 ### Tech Stack & Why It's Used:
-- **Cryptographic Avalanche Effect**: In SHA-256, changing even 1 single bit changes ~50% of the output hash. This provides mathematical, tamper-proof verification admissible in international courts.
+- **Multi-Modal Forensic Architecture**: Real-world adversaries do not announce when they modify a file. Simple hash checking only says "file not found." LEXVAULT's multi-modal engine actively tells investigators *which* evidence was modified, *how* much it was altered, and *where* the altered pixels or paragraphs are located.
 
 ---
 
@@ -450,10 +489,15 @@ Verify multimodal semantic search combining traditional keyword matching with Op
 
 Print or keep this quick sequence in mind for your final demonstration:
 
-1. **Top Bar**: Show `SEPOLIA LIVE` (Chain ID 11155111) & WORM compliance.
-2. **Repository**: Filter evidence by case number, click row to open forensic drawer.
+1. **Top Bar**: Show `🟢 SEPOLIA LIVE` (Chain ID 11155111, live block updates) & WORM compliance.
+2. **Repository & RBAC**: Show 3 personas (Investigator `1001`, Analyst `2002`, Auditor `3003`) and how PIN elevation protects sensitive tools.
 3. **Court Dossier**: Click `Court Dossier (PDF)` to show the Section 65B legal certificate with embedded QR code.
 4. **Custody Transfer**: Click `Transfer Custody`, assign a new custodian, watch the timeline update.
-5. **ELA Tamper Heatmap**: Show the compression error differential detecting image tampering.
-6. **Verification Dropzone**: Drop an authentic file (green verified) vs modified file (red alert).
+5. **Batch Ingestion & Tamper Screening**: Upload evidence and show real-time pre-screening against existing vault derivatives.
+6. **Deep Multi-Modal Verification**:
+   - Drop an authentic file ➔ Green `AUTHENTIC` card with Sepolia proof.
+   - Drop a registered tampered file ➔ Red `REGISTERED VAULT RECORD — FLAGGED AS TAMPERED` card with 100% anomaly score and comparison slider against clean root record.
+   - Drop an unregistered altered copy ➔ Red `TAMPERED EVIDENCE DETECTED` with interactive comparison split slider, 3-way side-by-side, ELA heatmap, and pHash details!
+   - Drop an edited PDF ➔ Text diff viewer highlighting additions and deletions.
 7. **Export Ledger**: Click `Export Global Ledger (CSV)` to prove transparent external auditability.
+

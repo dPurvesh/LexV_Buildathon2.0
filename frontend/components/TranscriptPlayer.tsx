@@ -58,13 +58,15 @@ export default function TranscriptPlayer({
   const isSearchMatch = (word: Word) =>
     search.length > 0 && word.word.toLowerCase().includes(search.toLowerCase());
 
+  const isMedia = data?.mime_type?.startsWith('audio/') || data?.mime_type?.startsWith('video/');
+
   return (
     <div className="transcript-modal" onClick={onClose}>
       <div className="transcript-content" onClick={(e) => e.stopPropagation()}>
         <div className="transcript-header">
           <div>
-            <span className="eyebrow">SYNCHRONIZED TRANSCRIPT</span>
-            <h3>Forensic Audio/Video Playback</h3>
+            <span className="eyebrow">{isMedia ? 'SYNCHRONIZED TRANSCRIPT' : 'DOCUMENT TEXT EXTRACTION'}</span>
+            <h3>{isMedia ? 'Forensic Audio/Video Playback' : 'Indexed Text & Searchable Content'}</h3>
           </div>
           <button className="inspector-close" onClick={onClose}>
             ✕
@@ -72,22 +74,24 @@ export default function TranscriptPlayer({
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
-        {!data && !error && <div className="loading-state">Loading transcript…</div>}
+        {!data && !error && <div className="loading-state">Loading content…</div>}
 
         {data && (
-          <div className="transcript-layout">
-            <div className="transcript-media">
-              {data.mime_type?.startsWith('video/') ? (
-                <video ref={mediaRef} src={mediaUrl} controls onTimeUpdate={handleTimeUpdate} className="transcript-video" />
-              ) : (
-                <audio ref={mediaRef} src={mediaUrl} controls onTimeUpdate={handleTimeUpdate} className="transcript-audio" />
-              )}
-            </div>
+          <div className={isMedia ? 'transcript-layout' : 'transcript-layout doc-layout'} style={!isMedia ? { display: 'flex', flexDirection: 'column' } : undefined}>
+            {isMedia && (
+              <div className="transcript-media">
+                {data.mime_type?.startsWith('video/') ? (
+                  <video ref={mediaRef} src={mediaUrl} controls onTimeUpdate={handleTimeUpdate} className="transcript-video" />
+                ) : (
+                  <audio ref={mediaRef} src={mediaUrl} controls onTimeUpdate={handleTimeUpdate} className="transcript-audio" />
+                )}
+              </div>
+            )}
 
-            <div className="transcript-text-panel">
+            <div className="transcript-text-panel" style={!isMedia ? { width: '100%', minHeight: '380px' } : undefined}>
               <input
                 className="transcript-search"
-                placeholder="Search in transcript…"
+                placeholder={isMedia ? "Search in transcript…" : "Search in document text…"}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -105,7 +109,21 @@ export default function TranscriptPlayer({
                     </span>
                   ))
                 ) : (
-                  <p className="transcript-plain">{data.text}</p>
+                  <p className="transcript-plain" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', fontFamily: 'inherit' }}>
+                    {search.trim() ? (
+                      data.text.split(new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')).map((part, i) =>
+                        part.toLowerCase() === search.toLowerCase() ? (
+                          <mark key={i} style={{ background: 'rgba(234, 179, 8, 0.35)', color: '#fef08a', padding: '1px 3px', borderRadius: '3px' }}>
+                            {part}
+                          </mark>
+                        ) : (
+                          part
+                        )
+                      )
+                    ) : (
+                      data.text
+                    )}
+                  </p>
                 )}
               </div>
             </div>

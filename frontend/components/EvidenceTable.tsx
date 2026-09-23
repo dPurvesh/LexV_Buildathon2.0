@@ -80,6 +80,27 @@ export default function EvidenceTable({
       .finally(() => setLoading(false));
   }, [page, sort, order, caseSearch, tamperOnly]);
 
+  // Auto-refresh when any evidence is still pending AI processing
+  useEffect(() => {
+    const hasPending = data?.items?.some((item) => !item.ai_indexed);
+    if (!hasPending) return;
+    const timer = setInterval(() => {
+      const params = new URLSearchParams({
+        page: String(page),
+        per_page: '15',
+        sort,
+        order,
+        ...(caseSearch ? { case_filter: caseSearch } : {}),
+        ...(tamperOnly ? { tamper_only: 'true' } : {}),
+      });
+      fetch(`${API_BASE}/api/v1/evidence/list?${params}`)
+        .then((r) => r.json())
+        .then(setData)
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [data, page, sort, order, caseSearch, tamperOnly]);
+
   const toggleSort = (col: string) => {
     if (sort === col) setOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
     else {
