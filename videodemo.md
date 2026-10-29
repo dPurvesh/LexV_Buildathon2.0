@@ -5,16 +5,32 @@
 
 ---
 
+## 📁 Pre-Generated Demo Evidence Assets (Ready in Workspace!)
+
+All required authentic and tampered forensic test pairs have been generated and are located right in your workspace folder:
+
+### 📂 Folder 1: Authentic Baseline Records (`demo_evidence/01_AUTHENTIC/`)
+* 📄 **Document**: `demo_evidence/01_AUTHENTIC/Forensic_Case_Report_CR902.pdf` (Clean CFSL Section 65B seizure report)
+* 🖼️ **Image**: `demo_evidence/01_AUTHENTIC/CCTV_Vault_Entrance_01.jpg` (Security vault camera frame at 30FPS)
+* 🎙️ **Audio**: `demo_evidence/01_AUTHENTIC/Emergency_Radio_Dispatch_Call.wav` (Police radio dispatch sequence with roger beep)
+
+### 📂 Folder 2: Tampered Derivatives (`demo_evidence/02_TAMPERED/`)
+* 📄 **Tampered Document**: `demo_evidence/02_TAMPERED/Forensic_Case_Report_CR902_TAMPERED.pdf` (Altered vehicle, dates, and amounts with redacted signatures)
+* 🖼️ **Tampered Image**: `demo_evidence/02_TAMPERED/CCTV_Vault_Entrance_01_TAMPERED.jpg` (Perceptual pHash match with spliced anomalous override box on vault door)
+* 🎙️ **Tampered Audio**: `demo_evidence/02_TAMPERED/Emergency_Radio_Dispatch_Call_TAMPERED.wav` (Altered pitch with injected intrusive frequency noise burst)
+
+---
+
 ## ⏱️ Video Overview & Timeline Architecture (Total: 3:00 / 180s)
 
 | Timestamp | Duration | Section | Core Features Showcased |
 | :--- | :---: | :--- | :--- |
 | **0:00 – 0:25** | 25s | **1. System Telemetry & Role Governance** | • MST Mainnet Live Anchor (Chain ID `4646`)<br>• WORM Lock 365D Compliance<br>• 3-Persona PIN Gatekeeper (`1001` / `2002` / `3003`) with Demo Chips & Eye Toggle |
-| **0:25 – 0:50** | 25s | **2. Repository & AI Semantic Search** | • Natural language vector search (`pgvector` + CLIP ViT-B/32)<br>• Dynamic suggestion chips (`"traffic accident"`, `"night robbery"`)<br>• Case filter & Clear Filter (`X`) button |
-| **0:50 – 1:35** | 45s | **3. Multi-Modal Forensic Deep Dive** | • **Image**: 🔴 Direct Red Tamper Localization Mask, OpenCV `ALTERED` box (`4.17%`), ↔️ 3-Way Split Canvas Slider<br>• **Audio**: 🎙️ `faster-whisper` word-level playback scrubbing<br>• **Document**: 📜 PDF legal sequence diff highlighting |
-| **1:35 – 2:05** | 30s | **4. Chain of Custody & Smart Contract Handoff** | • Luminous custody timeline with historical milestones<br>• Role PIN clearance modal (`1001`)<br>• Live MST Mainnet on-chain transaction anchor & MSTScan receipt link |
-| **2:05 – 2:35** | 30s | **5. Statutory Section 65B Court Dossier** | • Auditor PIN authentication (`3003`)<br>• Instant vector-precise Section 65B / BSA § 63 PDF generation<br>• Embedded dynamic verification QR code linking to MSTScan block explorer |
-| **2:35 – 3:00** | 25s | **6. Verification Dropzone & Tamper Radar** | • Client-side WebCrypto SHA-256 live hashing bar<br>• Authentic File Test: Green `STATUS: VERIFIED` card with block height<br>• Tampered Derivative Test: Red `INTEGRITY BREACH` card with pHash match & perimeters |
+| **0:25 – 1:00** | 35s | **2. Live Ingestion of New Evidence** | • Tab `[03] Ingestion & WORM Lock`<br>• Ingest authentic Document, Image, and Audio<br>• WebCrypto SHA-256 progress & MST Mainnet live consensus mining |
+| **1:00 – 1:40** | 40s | **3. Multi-Modal Forensic Deep Dive** | • **Image**: 🔴 Red Tamper Localization Mask, OpenCV `ALTERED` box, 3-Way Split Canvas Slider<br>• **Audio**: 🎙️ `faster-whisper` word-level playback scrubbing<br>• **Document**: 📜 PDF legal sequence diff highlighting |
+| **1:40 – 2:05** | 25s | **4. Custody Handoff & Section 65B Dossier** | • Custody transfer on MST Mainnet (PIN `1001`) with MSTScan link<br>• Statutory Section 65B Court Dossier PDF (PIN `3003`) with embedded dynamic QR code |
+| **2:05 – 2:35** | 30s | **5. Verification Dropzone: Tamper Radar** | • Tab `[04] Verification Dropzone`<br>• Drop tampered derivative files<br>• Instant Red `INTEGRITY BREACH DETECTED` card with pHash match & perimeters |
+| **2:35 – 3:00** | 25s | **6. Ingestion Tamper Interception (Tamper Alert)** | • Tab `[03] Ingestion & WORM Lock`<br>• Attempt to ingest the tampered derivative<br>• Pre-check alert: `Derivative of [Original] (Tamper Alert)`<br>• Permanent red `ANCHORED (TAMPER ALERT)` badge in repository |
 
 ---
 
@@ -22,11 +38,9 @@
 
 1. **Verify Services Running**:
    * Open your browser to `http://localhost:3000`.
-   * Open DevTools or ensure browser zoom is set to `100%` or `90%` for crisp widescreen 16:9 capture (1920×1080).
-2. **Have 3 Test Files Ready on Desktop / Downloads**:
-   * **File 1 (Image)**: An authentic photo or CCTV frame (and its tampered/derivative version if testing dropzone).
-   * **File 2 (Audio)**: A voice note, 911 dispatch, or police radio snippet (`.mp3`, `.wav`, or `.m4a`).
-   * **File 3 (Document)**: A contract or legal report (`.pdf`).
+   * Ensure browser zoom is set to `100%` or `90%` for crisp widescreen 16:9 capture (1920×1080).
+2. **Open the `demo_evidence` folder in File Explorer side-by-side**:
+   * Have `demo_evidence/01_AUTHENTIC` and `demo_evidence/02_TAMPERED` open in another window or on Desktop so you can drag and drop smoothly during recording.
 3. **Keep Role PINs in Mind**:
    * 🛡️ **Investigator**: `1001`
    * 🔬 **Forensic Analyst**: `2002`
@@ -45,166 +59,160 @@
 * **Action**: Hover your mouse cursor over the top telemetry strip.
 * **What to Show**:
   * Point at **`🟢 MST MAINNET LIVE`** (glowing green status dot).
-  * Point at **`NETWORK: MST MAINNET (4646)`** and live synchronized **`BLOCK: #21760xxx`**.
+  * Point at **`NETWORK: MST MAINNET (4646)`** and live synchronized **`BLOCK: #2176xxxx`**.
   * Point at the **`WORM LOCK: 365D COMPLIANCE`** badge.
   * Point at **`CONTRACT: 0x62ae…0c7e`** and click the copy icon (show green checkmark animation).
 * **Script Anchor for AI**: *"LEXVAULT operates on the public MST Mainnet (Chain ID 4646) paired with SEC Rule 17a-4 compliant 365-day MinIO WORM storage, guaranteeing zero data deletion even by root superusers."*
 
 #### Step 1.2: Demonstrate the 3-Persona Role Gatekeeper
-* **Action**: Click the **Role Selector Pill** in the top right (currently showing `Investigator`).
+* **Action**: Click the **Role Selector Pill** in the top right (showing `Investigator`).
 * **What to Show**:
   * The **"Switch Forensic Persona"** modal opens.
-  * Show the new **Quick Clearance PIN chips**: `Investigator: 1001`, `Forensic Analyst: 2002`, `Court Auditor: 3003`.
+  * Show the **Quick Clearance PIN chips**: `Investigator: 1001`, `Forensic Analyst: 2002`, `Court Auditor: 3003`.
   * Click the **Eye icon** (`👁️`) inside the input box to demonstrate the PIN visibility toggle.
-  * Click the `Forensic Analyst: 2002` chip — observe it auto-fill and switch your active role to Forensic Analyst with the purple halo badge.
+  * Click the `Investigator: 1001` chip — observe it auto-fill and switch role.
 * **Script Anchor for AI**: *"Statutory access control enforces strict legal duty separation between Investigators, Forensic Analysts, and Court Auditors."*
 
 ---
 
-### ⏱️ SECTION 2: Repository & AI Semantic Search (0:25 – 0:50)
-* **Screen View**: Tab `[01] Repository & AI Search`.
+### ⏱️ SECTION 2: Live Ingestion of New Evidence (0:25 – 1:00)
+* **Screen View**: Tab `[03] Ingestion & WORM Lock`.
 
-#### Step 2.1: Showcase the Live Command Center KPI Cards
-* **Action**: Pan cursor across the 6 dashboard metric cards:
-  * `16 Evidence Items` • `12 Active Cases` • `10.4 MB WORM Storage` • `4 Tamper Alerts` • `16 Vector Indexed` • `2 Custody Handoffs`.
-* **Script Anchor for AI**: *"Our real-time forensic dashboard tracks vault volume, tamper anomalies, and confirms that 100% of stored records are vector-indexed."*
+#### Step 2.1: Navigate to Ingestion Tab
+* **Action**: Click Tab **`[03] Ingestion & WORM Lock`**.
+* **What to Show**:
+  * Case Number: Enter `CASE-2026-CR902`.
+  * Custodian: Enter `Central Cyber Forensic Lab`.
 
-#### Step 2.2: Demonstrate `pgvector` Semantic AI Search
+#### Step 2.2: Ingest the 3 Authentic Files
 * **Action**:
-  * Click on one of the dynamic suggestion chips below the search bar (e.g. click **`"traffic accident"`** or **`"night robbery"`**).
-  * Observe the instant cosine retrieval from `pgvector` (512-dim CLIP ViT vectors) filtering matching visual and document evidence.
-  * Type a custom query in the search bar: e.g. `burglary` and hit Enter.
-  * Show the instant match count: e.g. `1 semantic matches (cosine threshold: 0.70)`.
-* **Script Anchor for AI**: *"Powered by pgvector and CLIP ViT embeddings, investigators can query vast evidence archives using natural language conceptual descriptions without manual tagging."*
-
-#### Step 2.3: Demonstrate Case Filtering & Clear Filter
-* **Action**:
-  * In the **Filter by case number** box, type `CASE-2026-PDF4`.
-  * Observe the table filter down to that case.
-  * Click the **`X Clear Filter`** button — show the table immediately spring back to all 16 items.
+  * Drag and drop the 3 authentic files from `demo_evidence/01_AUTHENTIC/`:
+    1. `Forensic_Case_Report_CR902.pdf`
+    2. `CCTV_Vault_Entrance_01.jpg`
+    3. `Emergency_Radio_Dispatch_Call.wav`
+  * Click the **`🚀 Ingest & Anchor Evidence to Ledger`** button.
+* **What to Show**:
+  * **Stage 01**: In-memory WebCrypto client-side SHA-256 hash generation with glowing progress bar.
+  * **Stage 02**: MinIO WORM storage upload with immutable 365-day retention lock.
+  * **Stage 03**: Real-time smart contract transaction broadcast to MST Mainnet:
+    * Notice badge: `Mining on MST Chain (~15s)`.
+  * **Stage 04**: All 3 items turn green: **`ANCHORED`** with live MST transaction hashes!
+* **Script Anchor for AI**: *"During ingestion, client-side WebCrypto computes SHA-256 digests before sealing files under WORM retention and mining immutable cryptographic receipts directly onto the MST Mainnet."*
 
 ---
 
-### ⏱️ SECTION 3: Multi-Modal Forensic Deep Dive (0:50 – 1:35)
-* **Screen View**: Evidence Table $\rightarrow$ Inspector Modals.
+### ⏱️ SECTION 3: Multi-Modal Forensic Deep Dive (1:00 – 1:40)
+* **Screen View**: Tab `[01] Repository & AI Search` $\rightarrow$ Evidence Table $\rightarrow$ Inspector Modals.
 
-#### Part A: Image Tamper Localization & 3-Way Slider (0:50 – 1:10)
-* **Action**:
-  * In the Evidence Table, locate an image item (e.g., `171115513` or `CanHiddenCameraFootage...`).
-  * Click the **`👁️ Inspect`** button.
-  * In the Inspector, click the purple button: **`🔬 Launch ELA & Tamper Radar`**.
-  * The interactive forensic viewer opens:
-    1. **Direct Red Tamper Localization Mask**: Show how pristine pixels stay natural, while altered/spliced pixels glow in **vivid semi-transparent red**.
-    2. **OpenCV Bounding Boxes**: Point to the bounding box labeled **`ALTERED`** with coordinates.
-    3. **Metrics Badge**: Point to the diagnostic banner: `1 Region Isolated • ALTERED AREA: 4.17% OF PIXELS`.
-    4. **3-Way Split-Screen Slider**: Grab the slider handle with your mouse and drag it across:
-       - Swipe mode 1: `Original Vault vs Red Tamper Highlight`
-       - Click mode 2: `Original Vault vs Uploaded Derivative`
-       - Click mode 3: `Uploaded vs ELA Compression Heatmap`
-  * Close the ELA modal.
-* **Script Anchor for AI**: *"Traditional SHA-256 hashing fails blindly when 1 single pixel changes. LEXVAULT solves this with computer-vision red tamper localization masks, OpenCV perimeters, and a 3-way split-screen slider that isolates exact altered areas for courtroom juries."*
+#### Step 3.1: Switch to Repository Tab
+* **Action**: Click Tab **`[01] Repository & AI Search`**.
+* **What to Show**:
+  * Point at the updated KPI strip: `Evidence Items` and `Vector Indexed` counts.
+  * Show the newly ingested items in the Evidence Table.
 
-#### Part B: Word-Level Audio Scrubbing via `faster-whisper` (1:10 – 1:25)
+#### Part A: Image Tamper Localization & 3-Way Slider (1:00 – 1:20)
 * **Action**:
-  * In the Evidence Table, locate the audio evidence (item with the audio icon, e.g. `CASE-2026-SOUND1 - Recording`).
+  * In the Evidence Table, locate an image item (e.g. `CCTV_Vault_Entrance_01.jpg` or existing image).
   * Click **`👁️ Inspect`**.
-  * Click the purple button: **`🎙️ Audio Transcript & Word-Level Forensics`**.
-  * The Audio Forensic Player opens:
-    * Click the **Play** button on the audio player.
-    * In the transcribed text below, click directly on any individual word (e.g. click a word in the second sentence).
-    * Notice how the audio playback instantly jumps to that exact millisecond timestamp!
+  * Click **`🔬 Launch ELA & Tamper Radar`**.
+  * Showcase:
+    1. **Direct Red Tamper Localization Mask**: Pristine pixels remain natural while altered pixels glow in vivid red.
+    2. **OpenCV Bounding Box**: Bounding box labeled **`ALTERED`** with coordinates.
+    3. **3-Way Split-Screen Slider**: Drag the slider handle to compare Original Vault vs Red Tamper Highlight vs ELA Heatmap.
+  * Close the ELA modal.
+* **Script Anchor for AI**: *"While traditional SHA-256 fails blindly when a single pixel changes, LEXVAULT computer-vision models isolate exact altered regions with red tamper masks and OpenCV bounding boxes for courtroom presentation."*
+
+#### Part B: Word-Level Audio Scrubbing via `faster-whisper` (1:20 – 1:30)
+* **Action**:
+  * In the Evidence Table, locate the audio evidence (e.g. `Emergency_Radio_Dispatch_Call.wav` or `CASE-2026-SOUND1`).
+  * Click **`👁️ Inspect`** $\rightarrow$ **`🎙️ Audio Transcript & Word-Level Forensics`**.
+  * Click **Play** on the audio player.
+  * Click directly on any word in the transcript text below — show the playback cursor immediately jump to that millisecond timestamp.
   * Close the audio modal.
-* **Script Anchor for AI**: *"For 911 calls and bodycam audio, faster-whisper generates vector-aligned transcripts with word-level playback scrubbing, running 100% locally with zero cloud privacy risks."*
+* **Script Anchor for AI**: *"For emergency dispatch and bodycam audio, faster-whisper provides 100% on-premise word-level playback scrubbing with zero cloud exposure."*
 
-#### Part C: Document PDF Differential Engine (1:25 – 1:35)
+#### Part C: Document PDF Differential Engine (1:30 – 1:40)
 * **Action**:
-  * In the Evidence Table, click **`👁️ Inspect`** on a PDF document (e.g. `Sample Report2 CCTV DVR` or `nagpur case`).
-  * Point out the file metadata, SHA-256 digest, and the text diff analysis highlighting added clauses in green (`+`) and deleted clauses in red (`-`).
+  * In the Evidence Table, click **`👁️ Inspect`** on a PDF document (`Forensic_Case_Report_CR902.pdf`).
+  * Show the extracted text diff panel with green added clauses (`+`) and red deleted clauses (`-`).
   * Close the Inspector.
-* **Script Anchor for AI**: *"PDF contracts and legal briefs undergo automated sequence differential analysis, flagging unauthorized clause modifications against baseline on-chain archives."*
 
 ---
 
-### ⏱️ SECTION 4: Chain of Custody & MST Mainnet Handoff (1:35 – 2:05)
-* **Screen View**: Evidence Table $\rightarrow$ Custody Timeline Section.
+### ⏱️ SECTION 4: Custody Handoff & Statutory Section 65B Dossier (1:40 – 2:05)
+* **Screen View**: Evidence Table $\rightarrow$ Custody Timeline & Certificate.
 
-#### Step 4.1: Inspect the Chain of Custody Timeline
+#### Step 4.1: Live Custody Handoff on MST Mainnet
 * **Action**:
-  * In the Evidence Table, click the cyan **`🔗 Custody`** button on any evidence row.
-  * The page smoothly scrolls to the **Chain of Custody Timeline**.
-  * Show the historical timeline cards:
-    * `INITIAL_INTAKE` (Intake & Cryptographic Seal)
-    * `FORENSIC_ANALYSIS` (Crime Lab Analysis)
-    * Show the green pill: **`WORM COMPLIANT`**.
-    * Point to the **`MST Chain TX: 0x85648b…`** link. Click it to show it points to `https://mstscan.com/tx/...`!
-* **Script Anchor for AI**: *"Every evidence lifecycle transition is sealed under MinIO WORM compliance and permanently anchored to the MST Blockchain public ledger."*
+  * Click the cyan **`🔗 Custody`** button on any evidence row.
+  * In the Chain of Custody Timeline, click **`Transfer Custody`**.
+  * Enter Target Custodian: `Forensic Science Laboratory - Digital Unit`.
+  * Click **`Submit Custody Transfer`** (enter PIN `1001` if prompted).
+  * Watch the transaction broadcast live to MST Mainnet and the new milestone card appear in the timeline with a clickable **`MST Chain TX`** link to `mstscan.com`.
+* **Script Anchor for AI**: *"Custody transfers execute decentralized smart contract state transitions, establishing an unbroken, courtroom-auditable chain of custody."*
 
-#### Step 4.2: Execute a Real Custody Handoff
+#### Step 4.2: Export Section 65B Court Dossier PDF
 * **Action**:
-  * Click the **`Transfer Custody`** button.
-  * Enter target custodian: `State Crime Laboratory - Cyber Division`.
-  * Action type: Select `FORENSIC_ANALYSIS` or `CUSTODY_TRANSFER`.
-  * Notes: Type `Transferred for forensic verification under Sec 65B`.
-  * Click **`Submit Custody Transfer`**.
-  * If prompted for role clearance, enter PIN `1001` (Investigator) and click Unlock.
-  * Watch the transaction broadcast live to MST Mainnet and the new milestone card appear in the timeline!
-* **Script Anchor for AI**: *"Custody transfers execute smart contract state changes with zero administrative override capability."*
+  * Click **`👁️ Inspect`** $\rightarrow$ **`📜 Generate Court Certificate (Section 65B PDF)`**.
+  * Prompted for Auditor role: Click chip **`Court Auditor: 3003`** and click Unlock.
+  * The official PDF immediately downloads and opens in the browser.
+  * Scroll down to show:
+    * **`ON-CHAIN CRYPTOGRAPHIC PROOF (MST BLOCKCHAIN)`**.
+    * High-resolution dynamic verification QR code linking directly to MSTScan block explorer.
+* **Script Anchor for AI**: *"Court Auditors can instantly export Section 65B dossiers featuring dynamic QR codes that link physical paper evidence binders directly to on-chain transaction receipts."*
 
 ---
 
-### ⏱️ SECTION 5: Statutory Section 65B Court Dossier & QR Code (2:05 – 2:35)
-* **Screen View**: Evidence Inspector $\rightarrow$ PDF Certificate.
-
-#### Step 5.1: Generate Court Admissible PDF Dossier
-* **Action**:
-  * In the Evidence Table, click **`👁️ Inspect`** on any evidence item.
-  * Click the green button: **`📜 Generate Court Certificate (Section 65B PDF)`**.
-  * If prompted with the Role Lock modal (*"Restricted to Court Auditor clearance"*):
-    * Click the **`Court Auditor: 3003`** chip to auto-fill.
-    * Click **`Unlock`**.
-  * The official PDF immediately downloads and opens in your browser!
-* **Script Anchor for AI**: *"Compliance Auditors can instantly export statutory Section 65B and BSA Section 63 court dossiers formatted for direct judicial submission."*
-
-#### Step 5.2: Highlight the Embedded Dynamic Verification QR Code
-* **Action**:
-  * Scroll down the opened PDF certificate to the bottom section:
-  * Point out the **`ON-CHAIN CRYPTOGRAPHIC PROOF (MST BLOCKCHAIN)`** heading.
-  * Point to the high-resolution QR code and the clickable MSTScan link below it.
-  * *(Optional visual flair)*: Briefly hover your smartphone camera over the QR code on screen to show it instantly resolves to the transaction on `mstscan.com`!
-* **Script Anchor for AI**: *"Every printed court dossier features an embedded dynamic QR code linking physical paper evidence binders directly to immutable on-chain block receipts on MSTScan."*
-
----
-
-### ⏱️ SECTION 6: Verification Dropzone & Real-Time Tamper Radar (2:35 – 3:00)
+### ⏱️ SECTION 5: Verification Dropzone: Tamper Radar (2:05 – 2:35)
 * **Screen View**: Tab `[04] Verification Dropzone`.
 
-#### Step 6.1: Drag & Drop an Authentic File
+#### Step 5.1: Drag & Drop Tampered Image Derivative
 * **Action**:
   * Click on Tab **`[04] Verification Dropzone`**.
-  * Drag and drop an authentic preserved file (or click to browse).
-  * Watch the **Client WebCrypto SHA-256 Digest Stream** progress bar animate from `0%` to `100%`.
-  * Observe the instant **Green `STATUS: VERIFIED & ADMISSIBLE IN COURT`** card appear:
-    * `BIT-EXACT SHA-256 MATCH`
-    * `On-Chain Registrar`: `0x118357b62786...`
-    * `MST Block Height`: `#21760xxx`
-    * `Chain Transaction`: Clickable MSTScan link!
-* **Script Anchor for AI**: *"Client-side WebCrypto SHA-256 streaming pre-screens files in milliseconds before verifying existence on the MST Blockchain."*
-
-#### Step 6.2: Drag & Drop a Tampered Derivative File
-* **Action**:
-  * Drag and drop a modified or tampered file into the dropzone.
-  * Watch the instant **Red `REGISTERED VAULT RECORD — INTEGRITY BREACH DETECTED`** card trigger!
+  * Drag and drop `demo_evidence/02_TAMPERED/CCTV_Vault_Entrance_01_TAMPERED.jpg` into the dropzone.
+* **What to Show**:
+  * Watch the client-side WebCrypto SHA-256 progress bar animate.
+  * Watch the **Red `REGISTERED VAULT RECORD — INTEGRITY BREACH DETECTED`** card trigger!
   * Point out:
-    * `TAMPER DRIFT: 4.17% DIVERGENCE`
-    * 64-bit DCT pHash perceptual match at `95.8%` similarity.
-    * The red pixel highlight overlay with OpenCV bounding boxes labeled **`ALTERED`**!
-* **Script Anchor for AI**: *"When altered derivatives are uploaded, LEXVAULT uses perceptual DCT matching to identify the parent record, overlays the exact tampered pixels in red, and flags the breach for judges."*
+    * **Perceptual pHash Match**: Identifies parent record `CCTV Vault Entrance 01` in `CASE-2026-CR902`.
+    * **Tamper Localization**: The red pixel overlay highlighting the exact altered region on the vault door with OpenCV box labeled **`ALTERED`**!
+* **Script Anchor for AI**: *"When a tampered derivative is dropped, LEXVAULT matches the perceptual DCT pHash of the authentic vault record, exposes the bitstream divergence, and overlays the exact altered pixels in vivid red."*
 
-#### Step 6.3: Concluding Hero Shot
+#### Step 5.2: Drag & Drop Tampered Document Derivative
 * **Action**:
-  * Switch back to the Command Center top view.
-  * Move cursor smoothly to center screen as the video fades out.
-* **Script Anchor for AI**: *"LEXVAULT: Turning vulnerable electronic evidence into mathematically certified, courtroom-unassailable truth. Powered by MST Blockchain."*
+  * Drag and drop `demo_evidence/02_TAMPERED/Forensic_Case_Report_CR902_TAMPERED.pdf` into the dropzone.
+* **What to Show**:
+  * Instant **Red Integrity Breach** card.
+  * Side-by-side text diff highlighting unauthorized clause modifications (altered dates, license plate change to DL01-XY-9999, and redacted signatures).
+* **Script Anchor for AI**: *"Document differentials instantly expose clause manipulations against baseline on-chain archives."*
+
+---
+
+### ⏱️ SECTION 6: Ingestion Tamper Interception (Tamper Alert) (2:35 – 3:00)
+* **Screen View**: Tab `[03] Ingestion & WORM Lock` $\rightarrow$ `[01] Repository & AI Search`.
+
+#### Step 6.1: Attempt to Ingest the Tampered File
+* **Action**:
+  * Click Tab **`[03] Ingestion & WORM Lock`**.
+  * Case Number: `CASE-2026-CR902`.
+  * Drag and drop the tampered file: `demo_evidence/02_TAMPERED/CCTV_Vault_Entrance_01_TAMPERED.jpg`.
+  * Click **`🚀 Ingest & Anchor Evidence to Ledger`**.
+* **What to Show**:
+  * **Stage 01 Pre-check Alert**:
+    * The system immediately detects:
+      `<AlertTriangle /> Derivative of "CCTV Vault Entrance 01" (Tamper Alert)`!
+  * Watch it complete upload and anchor:
+    * The status badge turns into a bold crimson warning:
+      **`<AlertTriangle /> ANCHORED (TAMPER ALERT)`**!
+
+#### Step 6.2: Final Repository Proof & Closing Hero Shot
+* **Action**:
+  * Click Tab **`[01] Repository & AI Search`**.
+  * Point out:
+    * The **`Tamper Alerts`** KPI card in the top strip has incremented!
+    * In the Evidence Table, the item is permanently flagged with the glowing red badge: **`🔴 TAMPERED`**.
+    * Click `👁️ Inspect` on it to show that the system has permanently preserved it with an unalterable forensic record of the tamper incident for court audit!
+* **Script Anchor for AI**: *"Even if an adversary attempts to re-ingest a tampered derivative, LEXVAULT's intake filter intercepts the breach, flags the anomaly, and anchors an immutable tamper alert on the blockchain. Turning digital evidence into courtroom-unassailable truth. Powered by MST Blockchain."*
 
 ---
 
@@ -215,14 +223,15 @@ Once you finish recording your screen, prompt your LLM with:
 ```markdown
 I have recorded a 3-minute screen recording of my project LEXVAULT based on the attached videodemo.md walkthrough.
 
-Please generate a high-impact, professional, confident voiceover script formatted with exact timestamp cues [0:00], [0:15], etc., matching the 3-minute video duration. The tone should be authoritative, cyber-forensic, and enterprise-grade, highlighting our integration with MST Blockchain (Chain ID 4646), MinIO WORM storage, OpenCV Red Tamper Localization, faster-whisper audio scrubbing, and Section 65B court dossiers.
+Please generate a high-impact, professional, confident voiceover script formatted with exact timestamp cues [0:00], [0:15], etc., matching the 3-minute video duration. The tone should be authoritative, cyber-forensic, and enterprise-grade, highlighting our integration with MST Blockchain (Chain ID 4646), MinIO WORM storage, OpenCV Red Tamper Localization, faster-whisper audio scrubbing, Section 65B court dossiers, and real-time Ingestion Tamper Interception.
 ```
 
 ---
 
 ## 🏆 Checklist for Demo Day Success
 - [x] **MST Mainnet Live**: Telemetry shows `MST MAINNET LIVE` on Chain `4646`.
-- [x] **No Mock Warnings**: Real transactions on `mstscan.com`.
-- [x] **All 3 Media Types Demonstrated**: Photo/CCTV (Red Tamper Localization), Audio (Whisper word scrub), Document (PDF differential).
+- [x] **New Ingestion Demonstrated**: Authentic PDF, JPG, and WAV ingested live.
+- [x] **Dropzone Tamper Radar Demonstrated**: Tampered image and document flagged with red localization and diffs.
+- [x] **Ingestion Tamper Interception Demonstrated**: Re-ingesting tampered file triggers `Derivative of...` alert and anchors with `ANCHORED (TAMPER ALERT)`.
 - [x] **Role Access Demonstrated**: Investigator (`1001`), Analyst (`2002`), Auditor (`3003`).
 - [x] **Section 65B PDF Shown**: High-res QR code linking to on-chain MSTScan block.
