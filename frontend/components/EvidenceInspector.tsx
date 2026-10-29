@@ -5,6 +5,7 @@ import ELAViewer from './ELAViewer';
 import TranscriptPlayer from './TranscriptPlayer';
 import CustodyTransferModal from './CustodyTransferModal';
 import { useRole } from '../context/RoleContext';
+import { txLink } from '../lib/explorer';
 import { Shield, X, FileText, Check, Link2, Search, AlertTriangle, Copy, Camera, Zap, Lock, Microscope, Mic, ScrollText, Share2 } from 'lucide-react';
 
 type EvidenceDetail = {
@@ -44,11 +45,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
-const EXPLORER_BASE = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'https://coral.mstscan.com';
 
-function txLink(hash?: string) {
-  return hash?.startsWith('0x') ? `${EXPLORER_BASE.replace(/\/$/, '')}/tx/${hash}` : undefined;
-}
 
 export default function EvidenceInspector({
   evidenceId,

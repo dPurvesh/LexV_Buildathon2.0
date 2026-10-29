@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import { saveExplorerUrl } from '../lib/explorer';
 
 type BlockchainHealth = {
   connected?: boolean;
@@ -28,7 +29,10 @@ export default function TelemetryBar() {
     const refresh = () =>
       fetch(`${API_BASE}/api/v1/blockchain/status`)
         .then((r) => r.json())
-        .then(setHealth)
+        .then((data) => {
+          setHealth(data);
+          if (data?.explorer_url) saveExplorerUrl(data.explorer_url);
+        })
         .catch(() => setHealth({ connected: false, error: 'Ledger unavailable' }));
     refresh();
     const timer = window.setInterval(refresh, 15000);

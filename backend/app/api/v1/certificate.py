@@ -299,7 +299,7 @@ def generate_certificate(evidence_id: str) -> StreamingResponse:
     # ── QR Code ──
     tx_hash = (evidence.get("eth_tx_hash") or "").strip()
     contract_address = os.getenv("CONTRACT_ADDRESS", "0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e").strip()
-    explorer_base = os.getenv("BLOCK_EXPLORER_URL", "https://coral.mstscan.com").rstrip("/")
+    explorer_base = os.getenv("BLOCK_EXPLORER_URL", "https://mstscan.com").rstrip("/")
 
     if tx_hash.startswith("0x") and len(tx_hash) > 10:
         qr_url = f"{explorer_base}/tx/{tx_hash}"

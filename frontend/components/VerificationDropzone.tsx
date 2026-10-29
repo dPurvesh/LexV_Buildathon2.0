@@ -74,11 +74,7 @@ async function sha256(file: File) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-const EXPLORER_BASE = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'https://coral.mstscan.com';
-
-function explorerLink(tx?: string) {
-  return tx?.startsWith('0x') ? `${EXPLORER_BASE.replace(/\/$/, '')}/tx/${tx}` : undefined;
-}
+import { txLink as explorerLink } from '../lib/explorer';
 
 export default function VerificationDropzone() {
   const [dragging, setDragging] = useState(false);

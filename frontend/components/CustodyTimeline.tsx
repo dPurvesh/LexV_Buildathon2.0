@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useRole } from '../context/RoleContext';
+import { txLink } from '../lib/explorer';
 import {
   Link2,
   X,
@@ -57,9 +58,7 @@ const shortenTx = (hash?: string) => {
   return hash;
 };
 
-const EXPLORER_BASE = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'https://coral.mstscan.com';
-const txLink = (hash?: string) =>
-  hash?.startsWith('0x') ? `${EXPLORER_BASE.replace(/\/$/, '')}/tx/${hash}` : undefined;
+
 
 const getActionMeta = (actionType: string) => {
   switch (actionType) {
