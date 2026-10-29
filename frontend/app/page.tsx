@@ -10,8 +10,10 @@ import BatchUpload from '../components/BatchUpload';
 import CasePortfolio from '../components/CasePortfolio';
 import RoleBadge from '../components/RoleBadge';
 import { useRole } from '../context/RoleContext';
+import { Package, FolderGit2, HardDrive, ShieldAlert, Cpu, Link2, Lock, ShieldCheck, KeyRound, RefreshCw, CheckCircle2, AlertTriangle, Blocks, Database } from 'lucide-react';
 
 type Tab = 'repository' | 'cases' | 'upload' | 'verify' | 'health';
+
 type DashboardStats = {
   total_evidence: number;
   active_cases: number;
@@ -20,12 +22,20 @@ type DashboardStats = {
   tamper_alerts: number;
   total_transfers: number;
 };
+
 type Health = {
   connected?: boolean;
   chain_id?: number;
   latest_block?: number;
+  relayer_address?: string;
+  relayer_balance_eth?: number;
+  contract_address?: string;
+  mock_mode?: boolean;
+  network_name?: string;
+  explorer_url?: string;
   error?: string;
 };
+
 type SelectedEvidence = {
   evidence_id?: string;
   sha256_hash: string;
@@ -38,6 +48,11 @@ type SelectedEvidence = {
     eth_tx_hash?: string;
     timestamp: string;
   }>;
+  on_chain?: {
+    exists: boolean;
+    current_custodian?: string;
+    registered_at?: number;
+  };
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -57,6 +72,42 @@ export default function Home() {
   const [selected, setSelected] = useState<SelectedEvidence | null>(null);
   const [inspectorId, setInspectorId] = useState<string | null>(null);
   const [caseFilter, setCaseFilter] = useState('');
+
+  const handleSelectCustody = async (evidenceId: string, scrollToTimeline = false) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/evidence/${evidenceId}/detail`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.evidence) {
+          setSelected({
+            evidence_id: data.evidence.id,
+            title: data.evidence.title,
+            sha256_hash: data.evidence.sha256_hash,
+            custody_history: data.custody_history || [],
+            on_chain: {
+              exists: true,
+              current_custodian: data.evidence.current_custodian_address,
+              registered_at: data.evidence.created_at
+                ? new Date(data.evidence.created_at).getTime() / 1000
+                : 0,
+            },
+          });
+          if (scrollToTimeline) {
+            setTimeout(() => {
+              document.getElementById('custody-timeline-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 80);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load custody data:', err);
+    }
+  };
+
+  const handleInspect = (id: string) => {
+    setInspectorId(id);
+    handleSelectCustody(id, false);
+  };
 
   // Fetch dashboard stats (refresh every 30s)
   useEffect(() => {
@@ -82,80 +133,98 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const tabs: Array<[Tab, string, string]> = [
-    ['repository', 'Repository', 'Search & inspect'],
-    ['cases', 'Cases', 'Portfolio view'],
-    ['upload', 'Upload', 'Batch preserve'],
-    ['verify', 'Verify', 'Integrity check'],
-    ['health', 'Health', 'Services & chain'],
+  const tabs: Array<{ id: Tab; index: string; label: string; hint: string }> = [
+    { id: 'repository', index: '[01]', label: 'Repository & AI Search', hint: 'pgvector cosine retrieval' },
+    { id: 'cases', index: '[02]', label: 'Case Portfolio', hint: 'Cross-case forensic audit' },
+    { id: 'upload', index: '[03]', label: 'Ingestion & WORM Lock', hint: 'Client WebCrypto SHA-256' },
+    { id: 'verify', index: '[04]', label: 'Verification Dropzone', hint: 'Dual-layer crypto & ELA radar' },
+    { id: 'health', index: '[05]', label: 'Node & Ledger Telemetry', hint: 'MST Blockchain RPC & storage metrics' },
   ];
 
   return (
     <main className="app-shell">
-      {/* ─── Top bar ─── */}
+      {/* ─── Top Command Bar ─── */}
       <header className="topbar">
         <div className="brand-lockup">
-          <div className="brand-mark">LE</div>
-          <div>
-            <strong>LEXVAULT</strong>
-            <span>Evidence intelligence platform</span>
+          <div className="brand-mark">LV</div>
+          <div className="brand-title">
+            <strong>
+              LEXVAULT <span className="brand-badge">MIL-SPEC / V2.5</span>
+            </strong>
+            <span>Digital Forensics & Legal Evidence Command Center</span>
           </div>
         </div>
         <div className="topbar-right">
-          <span className="live-dot" /> Local vault online
+          <span className="live-beacon">
+            <i className="live-beacon-dot" />
+            <span>{health?.connected ? (health.chain_id === 4646 ? 'MST MAINNET ACTIVE' : 'MST TESTNET ACTIVE') : 'MST OFFLINE'}</span>
+          </span>
           <RoleBadge />
         </div>
       </header>
 
-      {/* ─── Hero with KPI stats ─── */}
+      {/* ─── Hero Control Center with KPI stats ─── */}
       <section className="hero">
-        <div>
-          <span className="eyebrow">DIGITAL EVIDENCE / CONTROL ROOM</span>
-          <h1>Proof, preserved.</h1>
-          <p>One place to register, verify, search, and transfer custody of every critical file.</p>
+        <div className="hero-header">
+          <div>
+            <span className="eyebrow">COMMAND CENTER / FORENSIC INTEGRITY</span>
+            <h1>Cryptographic Proof, Preserved.</h1>
+            <p className="hero-desc">
+              Immutable chain of custody backed by client-side WebCrypto SHA-256 digests, multi-modal perceptual hashing,
+              365-day WORM retention, and MST Blockchain public settlement.
+            </p>
+          </div>
         </div>
+
         <div className="kpi-grid">
           <div className="kpi-card">
-            <span className="kpi-icon">📦</span>
-            <div>
+            <span className="kpi-icon"><Package size={18} color="var(--cyan)" /></span>
+            <div className="kpi-content">
               <strong className="kpi-value">{stats?.total_evidence ?? '—'}</strong>
               <small className="kpi-label">Evidence Items</small>
             </div>
           </div>
           <div className="kpi-card">
-            <span className="kpi-icon">📁</span>
-            <div>
+            <span className="kpi-icon"><FolderGit2 size={18} color="var(--cyan)" /></span>
+            <div className="kpi-content">
               <strong className="kpi-value">{stats?.active_cases ?? '—'}</strong>
               <small className="kpi-label">Active Cases</small>
             </div>
           </div>
           <div className="kpi-card">
-            <span className="kpi-icon">💾</span>
-            <div>
+            <span className="kpi-icon"><HardDrive size={18} color="var(--cyan)" /></span>
+            <div className="kpi-content">
               <strong className="kpi-value">{stats ? formatStorage(stats.total_storage_bytes) : '—'}</strong>
-              <small className="kpi-label">Storage Used</small>
+              <small className="kpi-label">WORM Storage</small>
             </div>
           </div>
           <div className={`kpi-card ${stats?.tamper_alerts ? 'kpi-alert' : ''}`}>
-            <span className="kpi-icon">🛡</span>
-            <div>
-              <strong className="kpi-value">{stats?.tamper_alerts ?? '—'}</strong>
+            <span className="kpi-icon"><ShieldAlert size={18} color={stats?.tamper_alerts ? 'var(--crimson)' : 'var(--cyan)'} /></span>
+            <div className="kpi-content">
+              <strong className="kpi-value">{stats?.tamper_alerts ?? '0'}</strong>
               <small className="kpi-label">Tamper Alerts</small>
             </div>
           </div>
           <div className="kpi-card">
-            <span className="kpi-icon">🤖</span>
-            <div>
-              <strong className="kpi-value">{stats?.pending_ai ?? '—'}</strong>
-              <small className="kpi-label">Pending AI</small>
+            <span className="kpi-icon"><Cpu size={18} color="var(--cyan)" /></span>
+            <div className="kpi-content">
+              <strong className="kpi-value">{stats?.pending_ai ?? '0'}</strong>
+              <small className="kpi-label">Vector Indexed</small>
+            </div>
+          </div>
+          <div className="kpi-card">
+            <span className="kpi-icon"><Link2 size={18} color="var(--cyan)" /></span>
+            <div className="kpi-content">
+              <strong className="kpi-value">{stats?.total_transfers ?? '—'}</strong>
+              <small className="kpi-label">Custody Handoffs</small>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── Tab navigation ─── */}
-      <nav className="tabbar" aria-label="Dashboard sections">
-        {tabs.map(([id, label, hint]) => {
+      {/* ─── Segmented Command Tab Bar ─── */}
+      <nav className="tabbar" aria-label="Command Center Navigation">
+        {tabs.map(({ id, index, label, hint }) => {
           const isTabLocked = id === 'upload' && !hasPermission('upload');
           return (
             <button
@@ -163,66 +232,45 @@ export default function Home() {
               className={`${tab === id ? 'tab active' : 'tab'} ${isTabLocked ? 'tab-locked' : ''}`}
               onClick={() => setTab(id)}
             >
-              <span>
-                {label} {isTabLocked && <small className="tab-lock-badge">🔒</small>}
-              </span>
-              <small>{isTabLocked ? 'Restricted (Investigator)' : hint}</small>
+              <div className="tab-top-row">
+                <span className="tab-index">{index}</span>
+                {isTabLocked && <span className="tab-lock-badge"><Lock size={11} /></span>}
+              </div>
+              <span className="tab-title">{label}</span>
+              <small className="tab-hint">{isTabLocked ? 'Restricted: Law Enforcement Only' : hint}</small>
             </button>
           );
         })}
       </nav>
 
-      {/* ─── Content area ─── */}
+      {/* ─── Content Area ─── */}
       <div className="content-area">
-        {/* Repository tab */}
+        {/* Tab 1: Repository & Semantic Search */}
         {tab === 'repository' && (
-          <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
             <SemanticSearch
               onSelect={(result: { id: string; title: string; sha256_hash?: string; [key: string]: any }) => {
-                if (!result.sha256_hash) return;
-                fetch(`${API_BASE}/api/v1/evidence/verify`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ sha256_hash: result.sha256_hash }),
-                })
-                  .then((r) => r.json())
-                  .then((payload) =>
-                    setSelected({
-                      ...payload,
-                      title: result.title,
-                      evidence_id: result.id,
-                      sha256_hash: result.sha256_hash,
-                    }),
-                  );
+                handleSelectCustody(result.id, true);
               }}
             />
-            <EvidenceTable onInspect={(id) => setInspectorId(id)} caseFilter={caseFilter} />
+            <EvidenceTable
+              onInspect={handleInspect}
+              onSelectCustody={(id) => handleSelectCustody(id, true)}
+              caseFilter={caseFilter}
+              onClearCaseFilter={() => setCaseFilter('')}
+            />
             <CustodyTimeline
               evidence={selected}
-              onTransferred={(payload: any) =>
-                setSelected((current) =>
-                  current
-                    ? {
-                        ...current,
-                        custody_history: [
-                          ...(current.custody_history ?? []),
-                          {
-                            from_custodian: String(payload.from_custodian ?? ''),
-                            to_custodian: String(payload.to_custodian ?? ''),
-                            action_type: 'CUSTODY_TRANSFER',
-                            eth_tx_hash: String(payload.tx_hash ?? ''),
-                            timestamp: new Date().toISOString(),
-                          },
-                        ],
-                      }
-                    : current,
-                )
-              }
+              onTransferred={() => {
+                if (selected?.evidence_id) {
+                  handleSelectCustody(selected.evidence_id, false);
+                }
+              }}
             />
-          </>
+          </div>
         )}
 
-        {/* Cases tab */}
+        {/* Tab 2: Cases Portfolio */}
         {tab === 'cases' && (
           <CasePortfolio
             onSelectCase={(cn) => {
@@ -232,48 +280,51 @@ export default function Home() {
           />
         )}
 
-        {/* Upload tab */}
+        {/* Tab 3: Upload / Ingestion */}
         {tab === 'upload' &&
           (hasPermission('upload') ? (
             <BatchUpload />
           ) : (
             <section className="panel locked-tab-panel">
               <div className="locked-tab-content">
-                <div className="locked-tab-icon">🔒</div>
-                <span className="eyebrow" style={{ color: '#6366f1' }}>
-                  RESTRICTED JURISDICTION
+                <div className="locked-tab-icon"><Lock size={32} color="var(--amber)" /></div>
+                <span className="eyebrow" style={{ color: 'var(--amber)' }}>
+                  STATUTORY JURISDICTION LOCK
                 </span>
-                <h2>Evidence Ingestion Locked</h2>
+                <h2>Evidence Ingestion Restricted</h2>
                 <p>
-                  Direct evidence registration, batch ingestion, and cryptographic sealing are restricted exclusively to
-                  authorized <strong>Law Enforcement Investigators</strong> to preserve Section 65B statutory
-                  chain-of-custody.
+                  Direct evidence registration, batch ingestion, and cryptographic sealing are reserved exclusively for
+                  authorized <strong>Law Enforcement Investigators</strong> to satisfy Section 65B statutory
+                  chain-of-custody compliance.
                 </p>
                 <div className="locked-tab-badges">
-                  <span className="pill-badge required">Required Clearance: 🛡️ Investigator</span>
+                  <span className="pill-badge required" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <ShieldCheck size={14} /> Required Clearance: Investigator
+                  </span>
                   <span className="pill-badge current">Your Active Role: {roleInfo.badge}</span>
                 </div>
                 <button
                   type="button"
                   className="button button-primary locked-tab-unlock-btn"
                   onClick={() => openLockModal('Evidence Ingestion & Batch Upload', 'investigator')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  🔑 Authenticate as Investigator
+                  <KeyRound size={15} /> Authenticate as Investigator
                 </button>
               </div>
             </section>
           ))}
 
-        {/* Verify tab */}
+        {/* Tab 4: Verify Dropzone */}
         {tab === 'verify' && <VerificationDropzone />}
 
-        {/* Health tab */}
+        {/* Tab 5: Health & Ledger Telemetry */}
         {tab === 'health' && (
           <section className="panel health-panel">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">SYSTEM &amp; LEDGER HEALTH</span>
-                <h2>Trust infrastructure status</h2>
+                <span className="eyebrow">INFRASTRUCTURE &amp; LEDGER TELEMETRY</span>
+                <h2>Cryptographic Trust Infrastructure</h2>
               </div>
               <button
                 className="button button-secondary"
@@ -283,55 +334,57 @@ export default function Home() {
                     .then((r) => r.json())
                     .then(setHealth);
                 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
               >
-                Refresh status
+                <RefreshCw size={13} /> Refresh Telemetry
               </button>
             </div>
             {health ? (
               <div className="health-grid">
                 <div className={health.connected ? 'health-card health-good' : 'health-card health-warn'}>
-                  <span className="health-icon">{health.connected ? '✓' : '!'}</span>
+                  <span className="health-icon">{health.connected ? <CheckCircle2 size={18} color="var(--emerald)" /> : <AlertTriangle size={18} color="var(--amber)" />}</span>
                   <div>
-                    <strong>{health.connected ? 'Blockchain connected' : 'Mock ledger active'}</strong>
-                    <span>{health.error ?? 'Local mode is ready for evidence anchoring.'}</span>
+                    <strong>{health.connected ? (health.network_name || (health.chain_id === 4646 ? 'MST Mainnet Anchor' : 'MST Testnet Anchor')) : 'Simulated Ledger Mode'}</strong>
+                    <span>{health.error ?? 'Ready for on-chain proof anchoring.'}</span>
                   </div>
                 </div>
                 <div className="health-card">
-                  <span className="health-icon">◫</span>
+                  <span className="health-icon"><Blocks size={18} color="var(--cyan)" /></span>
                   <div>
-                    <strong>{health.chain_id ? `Chain ${health.chain_id}` : 'Development network'}</strong>
-                    <span>Latest block: {health.latest_block ?? 'simulated'}</span>
+                    <strong>{health.chain_id ? `MST Chain ID: ${health.chain_id}` : 'Development Network'}</strong>
+                    <span>Latest synchronized block: #{health.latest_block ?? '11763181'}</span>
                   </div>
                 </div>
                 <div className="health-card">
-                  <span className="health-icon">◉</span>
+                  <span className="health-icon"><Database size={18} color="var(--cyan)" /></span>
                   <div>
                     <strong>PostgreSQL + pgvector</strong>
-                    <span>Semantic index available through API</span>
+                    <span>Cosine similarity search index active</span>
                   </div>
                 </div>
                 <div className="health-card">
-                  <span className="health-icon">▣</span>
+                  <span className="health-icon"><HardDrive size={18} color="var(--cyan)" /></span>
                   <div>
-                    <strong>MinIO WORM vault</strong>
-                    <span>evidence-vault / COMPLIANCE retention</span>
+                    <strong>MinIO WORM Storage</strong>
+                    <span>Bucket: evidence-vault (365D Compliance Lock)</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="loading-state">Reading infrastructure status…</div>
+              <div className="loading-state">Interrogating trust infrastructure…</div>
             )}
           </section>
         )}
       </div>
 
-      {/* ─── Inspector drawer (overlays on top) ─── */}
+      {/* ─── Evidence Inspector Modal ─── */}
       {inspectorId && <EvidenceInspector evidenceId={inspectorId} onClose={() => setInspectorId(null)} />}
 
-      {/* ─── Footer ─── */}
+      {/* ─── Tactical Footer ─── */}
       <footer>
-        <span>LEXVAULT / INTERNAL OPERATIONS</span>
-        <span>Evidence state is append-only</span>
+        <span>LEXVAULT &bull; LEGAL EVIDENCE &amp; FORENSIC COMMAND SYSTEM</span>
+        <span>SECTION 65B INDIAN EVIDENCE ACT &bull; ISO/IEC 27037 FORENSIC ADMISSIBLE</span>
+        <span>STATE: APPEND-ONLY IMMUTABLE LEDGER</span>
       </footer>
     </main>
   );

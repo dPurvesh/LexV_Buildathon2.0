@@ -14,7 +14,7 @@ The system is designed to provide:
 - Evidence ingestion with client-side and server-side SHA-256 verification.
 - Immutable evidence storage using a MinIO WORM vault.
 - PostgreSQL metadata and chain-of-custody records.
-- Ethereum/Sepolia anchoring for evidence hashes and custody operations.
+- MST Blockchain anchoring for evidence hashes and custody operations.
 - Multimodal AI indexing for images, video, audio, and transcripts.
 - Forensic image analysis for tamper indicators.
 - Semantic search over evidence embeddings.
@@ -33,7 +33,7 @@ flowchart LR
     Browser -->|SHA-256 in browser| API
     API --> DB[(PostgreSQL + pgvector)]
     API --> Vault[(MinIO WORM Vault)]
-    API --> Chain[Ethereum / Sepolia]
+    API --> Chain[MST Blockchain]
     API --> Worker[Background AI Worker]
     Worker --> Vault
     Worker --> DB
@@ -202,7 +202,8 @@ C:\Users\osmpu\Downloads\SEM5\eri new\.env
 Required Web3 variables:
 
 ```env
-WEB3_RPC_URL=https://your-sepolia-rpc-provider
+WEB3_RPC_URL=https://your-mst-rpc-provider
+BLOCK_EXPLORER_URL=https://coral.mstscan.com
 WALLET_PRIVATE_KEY=your_private_key
 CONTRACT_ADDRESS=0xYourDeployedContractAddress
 ```
@@ -211,7 +212,7 @@ Do not store real secret values in this documentation. Do not commit `.env` file
 
 The backend uses these values for:
 
-- Sepolia RPC connectivity.
+- MST Blockchain RPC connectivity.
 - Relayer account signing.
 - Contract calls and transaction submission.
 
@@ -235,7 +236,7 @@ Stores the primary evidence record:
 - SHA-256 hash.
 - Perceptual hash.
 - MinIO object key.
-- Ethereum transaction hash.
+- MST transaction hash.
 - Block number.
 - Current custodian.
 - Tamper flag.
@@ -262,7 +263,7 @@ Stores append-only custody events:
 - To custodian.
 - Action type.
 - Notes.
-- Ethereum transaction hash.
+- MST transaction hash.
 - Timestamp.
 
 A PostgreSQL trigger rejects updates and deletes, preserving the append-only property.
@@ -302,9 +303,9 @@ The contract deployer is assigned as the relayer. Contract mutations are restric
 
 `backend/scripts/deploy.py` compiles and deploys the Solidity contract using py-solc-x and writes ABI/configuration information to `backend/app/web3_config.json`.
 
-### Sepolia state
+### MST Blockchain state
 
-The backend has been connected successfully to Sepolia in the configured environment. The status endpoint reports chain connectivity, chain ID, latest block, relayer address, and balance when available.
+The backend connects dynamically to MST Blockchain (MST Coral Testnet 54635, MST Testnet 91562037, or MST Mainnet 4646). The status endpoint reports chain connectivity, chain ID, latest block, relayer address, balance, network_name, and explorer_url.
 
 The live contract address must be deployed and configured before relying on real contract mutations.
 
@@ -346,14 +347,14 @@ Completed:
 - Added deployment script.
 - Added mock-chain behavior for local development.
 - Added blockchain status endpoint.
-- Connected the backend to Sepolia RPC configuration.
+- Connected the backend to MST Blockchain RPC configuration.
 
 Validated:
 
 - Mock registration.
 - Mock custody transfer.
 - Mock chain verification.
-- Sepolia RPC connectivity.
+- MST Blockchain RPC connectivity.
 - Relayer detection and status reporting.
 
 ---
@@ -460,31 +461,43 @@ Component: `frontend/components/VerificationDropzone.tsx`
 
 Features:
 
-- Drag and drop.
-- Local file picker.
-- Browser-native SHA-256.
-- JSON verification request.
-- Authentic/verified state.
-- Tampered/integrity-breach state.
-- Custodian and registration information.
-- Transaction explorer link when available.
-- Hash display.
+- Drag and drop & local file picker.
+- Browser-native WebCrypto SHA-256 calculation.
+- Dual-layer verification: Exact SHA-256 match & 64-bit DCT perceptual hash (pHash) matching.
+- **🔴 Direct Red Tamper Localization (Default Active Tab)**: Highlights exact modified pixels in semi-transparent red (`rgba(239, 68, 68, 0.55)`), draws OpenCV contour bounding boxes labeled `ALTERED`, and reports exact altered pixel percentages (`ALTERED AREA: X.XX%`) with coordinates chips.
+- **↔️ 3-Way Interactive Split Slider**: Real-time slider between:
+  1. `🔴 Original vs Red Tamper Highlight`
+  2. `Original Vault vs Uploaded`
+  3. `Uploaded vs ELA Heatmap`
+- **👥 Side-by-Side Dual View** and **🔬 Thermal Diff Heatmap (JET)**.
+- **PDF Text Diff Viewer**: Detects added (`+`) and removed (`-`) lines via `difflib`.
+- Standalone ELA & Red Anomaly Localization for unregistered files.
+- Custodian, block number, and MSTScan transaction explorer links.
 
-### Upload interface
+### Evidence table & repository
 
-Component: `frontend/components/EvidenceUploadModal.tsx`
+Component: `frontend/components/EvidenceTable.tsx`
 
 Features:
 
-- Case number.
-- Evidence title.
-- Initial custodian.
-- Image, audio, video, and PDF selection.
-- Client-side SHA-256.
-- Multipart upload.
-- Upload progress bar.
-- Object key display.
-- Transaction hash display.
+- Table and grid dual-view toggle.
+- Category & MIME type filters.
+- Case number search filter.
+- **`✕ Clear Filter` Button**: 1-click instant reset of active case or keyword filters.
+- Direct row inspection launching the Evidence Inspector Drawer.
+
+### ELA forensic viewer
+
+Component: `frontend/components/ELAViewer.tsx`
+
+Features:
+
+- On-the-fly dynamic ELA generation from MinIO WORM storage.
+- **Dual-Mode Inspection Toggle**:
+  - `🔴 Red Anomaly Mask`: Direct anomaly overlay on original evidence with OpenCV bounding boxes labeled `ANOMALY`.
+  - `🌡️ Thermal Spectrum`: Classic multi-color JET colormap.
+- Interactive split slider divider.
+- Quantitative tamper anomaly score & 64-bit perceptual hash.
 
 ### Semantic search
 
@@ -493,17 +506,12 @@ Component: `frontend/components/SemanticSearch.tsx`
 Features:
 
 - Natural-language query input.
-- Semantic API request.
-- Similarity confidence percentage.
+- **1-Click Quick Suggestion Topic Chips**: Pre-populated indexed topics (`traffic accident`, `armed robbery`, `audio wiretap`, etc.).
+- **Zero-Match Guidance**: Explains vector similarity thresholds and provides clickable recovery fallback chips.
+- Semantic API request with similarity confidence percentage.
 - Case number and title cards.
-- Transcript snippets.
-- Preview URL loading.
-- Image previews.
-- Audio controls.
-- Video controls.
-- Image zoom modal.
-- Secure-link copy action.
-- Expiration countdown.
+- Transcript snippets and image/audio/video preview players.
+- Secure-link copy action with expiration countdown.
 
 ### Custody timeline
 
@@ -511,13 +519,10 @@ Component: `frontend/components/CustodyTimeline.tsx`
 
 Features:
 
-- Chronological custody nodes.
+- Chronological custody nodes with optimized spacing and vertical connector lines.
 - From/to custodian formatting.
-- Action types.
-- Timestamps.
-- Transaction links.
-- Transfer custody dialog.
-- Notes and action selection.
+- Action types, timestamps, and on-chain transaction hashes.
+- Transfer custody dialog with notes and action selection.
 
 ### Dashboard shell
 
@@ -639,7 +644,7 @@ Returns:
 - Evidence ID.
 - SHA-256 hash.
 - MinIO object key.
-- Ethereum transaction hash.
+- MST transaction hash.
 - Block number.
 - Mock-chain indicator.
 
@@ -657,9 +662,44 @@ JSON body:
 }
 ```
 
-Multipart file verification is also supported.
+Multipart file verification (`multipart/form-data` with `file`) is also supported and triggers multi-modal computer vision and text analysis.
 
-Returns verification status, evidence metadata, chain information, custody history, tamper state, tamper score, and perceptual hash where available.
+Returns:
+- `verified` (boolean): Cryptographic SHA-256 match status.
+- `match_found` (boolean): Whether a perceptual hash derivative or text sequence match was identified.
+- `match_type` (`exact_hash` | `phash` | `pdf_text` | `audio_video`).
+- `red_overlay_b64` (string, base64 PNG): Direct red highlight mask (`rgba(239, 68, 68, 0.55)`) with labeled OpenCV bounding boxes around altered regions.
+- `tamper_boxes` (array): Bounding box coordinates `[{ x, y, w, h, area }]`.
+- `changed_pixels_ratio` (float): Exact proportion of altered pixels (e.g. `0.0417` = 4.17%).
+- `diff_heatmap_b64` (string, base64 PNG): Thermal JET colormap difference heatmap.
+- `ela_heatmap_b64` (string, base64 PNG): Error Level Analysis compression heatmap.
+- `original_b64` & `uploaded_b64` (string, base64 PNG): Baseline and uploaded images.
+- `text_diff` (object): Line-by-line additions and deletions for altered PDF documents.
+- `on_chain` (object) & `custody_history` (array): Smart contract anchoring details.
+
+### Forensic ELA & Red Anomaly Localization
+
+```text
+GET /api/v1/forensics/{evidence_id}/ela-heatmap
+```
+
+Fetches the image directly from MinIO and executes on-the-fly Error Level Analysis and red anomaly mask localization.
+
+Returns:
+- `original_b64`: Original image base64 PNG.
+- `heatmap_b64`: JET colormap thermal compression heatmap.
+- `red_overlay_b64`: Direct red highlight overlay with OpenCV `ANOMALY` bounding boxes.
+- `tamper_boxes`: Bounding box perimeters array.
+- `tamper_score`: Anomaly deviation score between 0.0 and 1.0.
+- `phash`: 64-bit DCT perceptual hash.
+
+### Court Dossier PDF Certificate
+
+```text
+GET /api/v1/evidence/{evidence_id}/certificate
+```
+
+Generates an official Section 65B Indian Evidence Act / BSA 2023 § 63 certified court dossier PDF with embedded QR code.
 
 ### Semantic search
 
@@ -788,7 +828,7 @@ The following checks have passed during implementation:
 - Client/server SHA-256 comparison.
 - Evidence verification.
 - Mock blockchain registration.
-- Sepolia RPC connection.
+- MST Blockchain RPC connection.
 - CLIP image inference.
 - 512-dimensional vector generation.
 - Whisper transcription.
@@ -842,7 +882,7 @@ Production hardening still required:
 - Media previews require a browser-reachable MinIO endpoint.
 - Search results require completed background AI indexing.
 - PDF files are stored and shareable but do not receive CLIP image analysis in the current worker.
-- Live Sepolia contract operations require a deployed and configured contract address.
+- Live MST Blockchain contract operations require a deployed and configured contract address.
 - Authentication and authorization are not yet implemented.
 - The Docker Compose `version` field is obsolete in modern Compose and may emit a warning.
 
@@ -869,7 +909,7 @@ Production hardening still required:
 
 ### Remaining production work
 
-- Deploy `EvidenceTracker.sol` to Sepolia if not already deployed.
+- Deploy `EvidenceTracker.sol` to MST Blockchain if not already deployed.
 - Set and verify `CONTRACT_ADDRESS`.
 - Test real on-chain registration and custody transfer.
 - Add user authentication and authorization.

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Link2, X, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
@@ -82,7 +83,7 @@ export default function CustodyTransferModal({
     <div className="transfer-modal-overlay">
       <div className="transfer-modal-card">
         <div className="transfer-modal-header">
-          <div className="transfer-shield-icon">⛓️</div>
+          <div className="transfer-shield-icon"><Link2 size={20} color="var(--cyan)" /></div>
           <div>
             <h3>Execute Chain-of-Custody Handoff</h3>
             <span className="transfer-subtitle">
@@ -90,7 +91,7 @@ export default function CustodyTransferModal({
             </span>
           </div>
           <button type="button" className="inspector-close" onClick={onClose}>
-            ✕
+            <X size={16} />
           </button>
         </div>
 
@@ -113,11 +114,11 @@ export default function CustodyTransferModal({
               onChange={(e) => setActionType(e.target.value)}
               className="transfer-select"
             >
-              <option value="FORENSIC_ANALYSIS">🔬 Forensic Lab Analysis</option>
-              <option value="COURT_SUBMISSION">⚖️ Courtroom Evidence Submission</option>
-              <option value="AGENCY_TRANSFER">🛡️ Inter-Agency Transfer</option>
-              <option value="ARCHIVAL_STORAGE">🗄️ Secure Archival Relocation</option>
-              <option value="DEFENSE_DISCOVERY">📂 Legal Discovery Disclosure</option>
+              <option value="FORENSIC_ANALYSIS">[FORENSIC] Forensic Lab Analysis</option>
+              <option value="COURT_SUBMISSION">[COURT] Courtroom Evidence Submission</option>
+              <option value="AGENCY_TRANSFER">[AGENCY] Inter-Agency Transfer</option>
+              <option value="ARCHIVAL_STORAGE">[VAULT] Secure Archival Relocation</option>
+              <option value="DEFENSE_DISCOVERY">[DISCOVERY] Legal Discovery Disclosure</option>
             </select>
           </div>
 
@@ -156,11 +157,16 @@ export default function CustodyTransferModal({
             />
           </div>
 
-          {error && <div className="alert alert-error">⚠️ {error}</div>}
+          {error && (
+            <div className="alert alert-error">
+              <AlertTriangle size={15} style={{ display: 'inline', marginRight: 6 }} /> {error}
+            </div>
+          )}
 
           {successTx && (
             <div className="transfer-success-banner">
-              ✓ Custody transfer confirmed & anchored to ledger!
+              <CheckCircle2 size={16} style={{ display: 'inline', marginRight: 6, color: 'var(--emerald)' }} />
+              Custody transfer confirmed &amp; anchored to ledger!
               <code>TX: {successTx.slice(0, 18)}...</code>
             </div>
           )}
@@ -179,7 +185,14 @@ export default function CustodyTransferModal({
               className="button button-primary transfer-submit-btn"
               disabled={isSubmitting || !!successTx}
             >
-              {isSubmitting ? 'Anchoring Transfer…' : '⚡ Confirm & Record Transfer'}
+              {isSubmitting ? (
+                'Anchoring Transfer…'
+              ) : (
+                <>
+                  <Zap size={14} style={{ display: 'inline', marginRight: 6 }} />
+                  Confirm &amp; Record Transfer
+                </>
+              )}
             </button>
           </div>
         </form>

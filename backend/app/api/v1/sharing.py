@@ -31,7 +31,7 @@ def _presign_client() -> Minio:
 @router.get("/{evidence_id}/share-url")
 def create_share_url(
     evidence_id: str,
-    expiry_minutes: int = Query(default=15, ge=1, le=60),
+    expiry_minutes: int = Query(default=1440, ge=1, le=10080),
     view_mode: Literal["preview", "download"] = Query(default="preview"),
     override_tampered: bool = Query(default=False),
 ) -> dict[str, object]:

@@ -31,7 +31,7 @@ export const ROLES: Record<Role, RoleInfo> = {
   investigator: {
     id: 'investigator',
     name: 'Investigator',
-    badge: '🛡️ Investigator',
+    badge: 'Investigator',
     code: 'INV',
     color: '#6366f1', // Indigo
     pin: '1001',
@@ -41,7 +41,7 @@ export const ROLES: Record<Role, RoleInfo> = {
   forensic_analyst: {
     id: 'forensic_analyst',
     name: 'Forensic Analyst',
-    badge: '🔬 Forensic Analyst',
+    badge: 'Forensic Analyst',
     code: 'ANA',
     color: '#a855f7', // Purple/Violet
     pin: '2002',
@@ -51,7 +51,7 @@ export const ROLES: Record<Role, RoleInfo> = {
   auditor: {
     id: 'auditor',
     name: 'Auditor',
-    badge: '⚖️ Court Auditor',
+    badge: 'Court Auditor',
     code: 'AUD',
     color: '#10b981', // Emerald
     pin: '3003',

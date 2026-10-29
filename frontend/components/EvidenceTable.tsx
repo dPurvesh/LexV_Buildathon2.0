@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRole } from '../context/RoleContext';
+import { ImageIcon, Video, Music, FileText, Paperclip, Download, Lock, AlertTriangle, Check, ArrowUp, ArrowDown, Eye, Link2, X } from 'lucide-react';
 
 type EvidenceItem = {
   id: string;
@@ -35,20 +36,24 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
-function mimeIcon(mime: string): string {
-  if (mime.startsWith('image/')) return '🖼';
-  if (mime.startsWith('video/')) return '🎬';
-  if (mime.startsWith('audio/')) return '🎵';
-  if (mime.includes('pdf')) return '📄';
-  return '📎';
+function mimeIcon(mime: string): React.ReactNode {
+  if (mime.startsWith('image/')) return <ImageIcon size={14} color="var(--cyan)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />;
+  if (mime.startsWith('video/')) return <Video size={14} color="#a855f7" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />;
+  if (mime.startsWith('audio/')) return <Music size={14} color="var(--amber)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />;
+  if (mime.includes('pdf')) return <FileText size={14} color="var(--crimson)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />;
+  return <Paperclip size={14} color="var(--text-muted)" style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} />;
 }
 
 export default function EvidenceTable({
   onInspect,
+  onSelectCustody,
   caseFilter,
+  onClearCaseFilter,
 }: {
   onInspect: (id: string) => void;
+  onSelectCustody?: (id: string) => void;
   caseFilter?: string;
+  onClearCaseFilter?: () => void;
 }) {
   const { hasPermission, openLockModal } = useRole();
   const [data, setData] = useState<ListResponse | null>(null);
@@ -110,7 +115,14 @@ export default function EvidenceTable({
     setPage(1);
   };
 
-  const sortIcon = (col: string) => (sort === col ? (order === 'asc' ? ' ↑' : ' ↓') : '');
+  const sortIcon = (col: string) => {
+    if (sort !== col) return null;
+    return order === 'asc' ? (
+      <ArrowUp size={11} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} />
+    ) : (
+      <ArrowDown size={11} style={{ display: 'inline', marginLeft: 4, verticalAlign: 'middle' }} />
+    );
+  };
 
   const triggerExport = () => {
     const params = new URLSearchParams({
@@ -131,15 +143,57 @@ export default function EvidenceTable({
       </div>
 
       <div className="filter-bar">
-        <input
-          placeholder="Filter by case number…"
-          value={caseSearch}
-          onChange={(e) => {
-            setCaseSearch(e.target.value);
-            setPage(1);
-          }}
-          className="filter-input"
-        />
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <input
+            placeholder="Filter by case number…"
+            value={caseSearch}
+            onChange={(e) => {
+              setCaseSearch(e.target.value);
+              setPage(1);
+            }}
+            className="filter-input"
+            style={{ paddingRight: caseSearch ? '28px' : '12px' }}
+          />
+          {caseSearch && (
+            <button
+              type="button"
+              onClick={() => {
+                setCaseSearch('');
+                onClearCaseFilter?.();
+                setPage(1);
+              }}
+              title="Clear filter"
+              style={{
+                position: 'absolute',
+                right: '8px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
+
+        {caseSearch && (
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => {
+              setCaseSearch('');
+              onClearCaseFilter?.();
+              setPage(1);
+            }}
+            style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          >
+            <X size={13} /> Clear Filter ({caseSearch})
+          </button>
+        )}
         <label className="filter-toggle">
           <input
             type="checkbox"
@@ -157,8 +211,9 @@ export default function EvidenceTable({
             className="button button-secondary export-csv-btn"
             onClick={triggerExport}
             title="Export court-audited CSV ledger of current repository evidence"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            📥 Export CSV Ledger
+            <Download size={14} /> Export CSV Ledger
           </button>
         ) : (
           <button
@@ -168,8 +223,9 @@ export default function EvidenceTable({
               openLockModal('Global Cryptographic Ledger Audit Export (CSV)', 'auditor', triggerExport)
             }
             title="Restricted: Requires Compliance Auditor clearance (PIN 3003)"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            🔒 Export CSV (Auditor)
+            <Lock size={14} /> Export CSV (Auditor)
           </button>
         )}
       </div>
@@ -189,6 +245,7 @@ export default function EvidenceTable({
                   <th onClick={() => toggleSort('tamper_score')}>Status{sortIcon('tamper_score')}</th>
                   <th>AI</th>
                   <th onClick={() => toggleSort('created_at')}>Created{sortIcon('created_at')}</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,9 +264,13 @@ export default function EvidenceTable({
                     <td>{formatSize(item.file_size_bytes)}</td>
                     <td>
                       {item.is_tampered ? (
-                        <span className="tamper-badge tamper-alert">⚠ Tampered</span>
+                        <span className="tamper-badge tamper-alert" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <AlertTriangle size={11} /> Tampered
+                        </span>
                       ) : (
-                        <span className="tamper-badge tamper-clean">✓ Clean</span>
+                        <span className="tamper-badge tamper-clean" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Check size={11} /> Clean
+                        </span>
                       )}
                     </td>
                     <td>
@@ -220,6 +281,44 @@ export default function EvidenceTable({
                     </td>
                     <td>
                       <time>{new Date(item.created_at).toLocaleDateString()}</time>
+                    </td>
+                    <td>
+                      <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onInspect(item.id);
+                          }}
+                          title="Open Evidence Inspector"
+                        >
+                          <Eye size={12} /> Inspect
+                        </button>
+                        {onSelectCustody && (
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            style={{
+                              fontSize: '11px',
+                              padding: '3px 8px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              borderColor: 'rgba(6, 182, 212, 0.35)',
+                              color: 'var(--cyan)',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectCustody(item.id);
+                            }}
+                            title="Inspect Chain of Custody Timeline"
+                          >
+                            <Link2 size={12} /> Custody
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

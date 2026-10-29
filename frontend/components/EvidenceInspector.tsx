@@ -5,6 +5,7 @@ import ELAViewer from './ELAViewer';
 import TranscriptPlayer from './TranscriptPlayer';
 import CustodyTransferModal from './CustodyTransferModal';
 import { useRole } from '../context/RoleContext';
+import { Shield, X, FileText, Check, Link2, Search, AlertTriangle, Copy, Camera, Zap, Lock, Microscope, Mic, ScrollText, Share2 } from 'lucide-react';
 
 type EvidenceDetail = {
   id: string;
@@ -43,8 +44,10 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
+const EXPLORER_BASE = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'https://coral.mstscan.com';
+
 function txLink(hash?: string) {
-  return hash?.startsWith('0x') ? `https://sepolia.etherscan.io/tx/${hash}` : undefined;
+  return hash?.startsWith('0x') ? `${EXPLORER_BASE.replace(/\/$/, '')}/tx/${hash}` : undefined;
 }
 
 export default function EvidenceInspector({
@@ -63,6 +66,7 @@ export default function EvidenceInspector({
   const [showTransfer, setShowTransfer] = useState(false);
   const [copied, setCopied] = useState(false);
   const [hashCopied, setHashCopied] = useState(false);
+  const [shareExpiryHours] = useState(24);
 
   const refreshEvidence = () => {
     setLoading(true);
@@ -95,13 +99,14 @@ export default function EvidenceInspector({
   const arcLength = Math.min(score, 1) * 157; // 157 is the approximate arc length
 
   const copyShareLink = () => {
-    fetch(`${API_BASE}/api/v1/evidence/${evidenceId}/share-url?expiry_minutes=15&view_mode=preview`)
+    const expiryMinutes = shareExpiryHours * 60;
+    fetch(`${API_BASE}/api/v1/evidence/${evidenceId}/share-url?expiry_minutes=${expiryMinutes}&view_mode=preview`)
       .then((r) => r.json())
       .then((data) => {
         if (data.url) {
           navigator.clipboard.writeText(data.url);
           setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          setTimeout(() => setCopied(false), 2500);
         }
       });
   };
@@ -119,8 +124,8 @@ export default function EvidenceInspector({
         <div className="inspector-header">
           <div className="inspector-header-left">
             <div className="inspector-header-pills">
-              <span className="inspector-eyebrow">
-                <span>🛡️</span> EVIDENCE DOSSIER
+              <span className="inspector-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <Shield size={14} color="var(--cyan)" /> EVIDENCE DOSSIER
               </span>
               {evidence?.case_number && (
                 <span className="inspector-case-tag">
@@ -131,7 +136,7 @@ export default function EvidenceInspector({
             <h3 id="inspector-title">{evidence?.title ?? 'Loading evidence…'}</h3>
           </div>
           <button className="inspector-close" onClick={onClose} title="Close inspector (Esc)" aria-label="Close">
-            ✕
+            <X size={16} />
           </button>
         </div>
 
@@ -146,12 +151,12 @@ export default function EvidenceInspector({
                 <div className="inspector-card">
                   <div className="inspector-card-header">
                     <div className="inspector-card-title">
-                      <span className="inspector-card-icon">📄</span>
+                      <span className="inspector-card-icon"><FileText size={15} color="var(--cyan)" /></span>
                       <span>Identity & File Specs</span>
                     </div>
                     {evidence.ai_indexed && (
-                      <span className="tamper-badge tamper-clean" style={{ fontSize: '9px', padding: '3px 8px' }}>
-                        AI INDEXED ✓
+                      <span className="tamper-badge tamper-clean" style={{ fontSize: '9px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        AI INDEXED <Check size={10} />
                       </span>
                     )}
                   </div>
@@ -186,17 +191,17 @@ export default function EvidenceInspector({
                 </div>
 
                 {/* Custody Chain Card */}
-                {custody.length > 0 && (
-                  <div className="inspector-card">
-                    <div className="inspector-card-header">
-                      <div className="inspector-card-title">
-                        <span className="inspector-card-icon">⛓️</span>
-                        <span>Custody Audit Trail ({custody.length})</span>
-                      </div>
-                      <span className="telemetry-worm" style={{ fontSize: '9px', padding: '2px 6px' }}>
-                        WORM SECURED
-                      </span>
+                <div className="inspector-card">
+                  <div className="inspector-card-header">
+                    <div className="inspector-card-title">
+                      <span className="inspector-card-icon"><Link2 size={15} color="var(--cyan)" /></span>
+                      <span>Custody Audit Trail ({custody.length})</span>
                     </div>
+                    <span className="telemetry-worm" style={{ fontSize: '9px', padding: '2px 6px' }}>
+                      WORM SECURED
+                    </span>
+                  </div>
+                  {custody.length > 0 ? (
                     <div className="mini-timeline">
                       {custody.map((entry, i) => (
                         <div className="mini-timeline-node" key={i}>
@@ -221,8 +226,13 @@ export default function EvidenceInspector({
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div style={{ padding: '12px 14px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      <div>Current Custodian: <code style={{ color: 'var(--cyan)' }}>{evidence.current_custodian_address?.trim() || 'Intake Registry'}</code></div>
+                      <div style={{ marginTop: '4px', fontSize: '11px' }}>Immutable ledger entry established at intake. No subsequent handoffs recorded.</div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* RIGHT COLUMN: Integrity, Blockchain & Actions */}
@@ -231,11 +241,11 @@ export default function EvidenceInspector({
                 <div className="inspector-card">
                   <div className="inspector-card-header">
                     <div className="inspector-card-title">
-                      <span className="inspector-card-icon">🔍</span>
+                      <span className="inspector-card-icon"><Search size={15} color="var(--cyan)" /></span>
                       <span>Cryptographic Integrity</span>
                     </div>
-                    <span className={`tamper-badge-large ${evidence.is_tampered ? 'tamper-alert' : 'tamper-clean'}`}>
-                      {evidence.is_tampered ? '⚠ TAMPERED' : '✓ AUTHENTIC'}
+                    <span className={`tamper-badge-large ${evidence.is_tampered ? 'tamper-alert' : 'tamper-clean'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      {evidence.is_tampered ? <><AlertTriangle size={13} /> TAMPERED</> : <><Check size={13} /> AUTHENTIC</>}
                     </span>
                   </div>
 
@@ -285,8 +295,9 @@ export default function EvidenceInspector({
                           className="hash-copy-btn"
                           onClick={() => copyHash(evidence.sha256_hash)}
                           title="Copy full SHA-256 hash"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                         >
-                          {hashCopied ? '✓ Copied' : '📋 Copy'}
+                          {hashCopied ? <><Check size={12} color="var(--emerald)" /> Copied</> : <><Copy size={12} /> Copy</>}
                         </button>
                       </div>
                       <div className="hash-value-full">{evidence.sha256_hash}</div>
@@ -306,7 +317,7 @@ export default function EvidenceInspector({
                 <div className="inspector-card">
                   <div className="inspector-card-header">
                     <div className="inspector-card-title">
-                      <span className="inspector-card-icon">🔗</span>
+                      <span className="inspector-card-icon"><Link2 size={15} color="var(--cyan)" /></span>
                       <span>Blockchain Anchor</span>
                     </div>
                     <span className="status-dot dot-green" title="Anchor synchronized" />
@@ -348,7 +359,7 @@ export default function EvidenceInspector({
                   <div className="inspector-card">
                     <div className="inspector-card-header">
                       <div className="inspector-card-title">
-                        <span className="inspector-card-icon">📸</span>
+                        <span className="inspector-card-icon"><Camera size={15} color="var(--cyan)" /></span>
                         <span>EXIF Forensic Metadata</span>
                       </div>
                     </div>
@@ -374,17 +385,17 @@ export default function EvidenceInspector({
                 )}
 
                 {/* Forensic Action Station */}
-                <div className="inspector-card" style={{ background: 'rgba(28, 20, 60, 0.75)' }}>
+                <div className="inspector-card">
                   <div className="inspector-card-header">
                     <div className="inspector-card-title">
-                      <span className="inspector-card-icon">⚡</span>
+                      <span className="inspector-card-icon"><Zap size={15} color="var(--cyan)" /></span>
                       <span>Forensic Operations</span>
                     </div>
                   </div>
                   <div className="inspector-actions-grid">
                     {hasPermission('custody_transfer') ? (
-                      <button className="button button-primary" onClick={() => setShowTransfer(true)}>
-                        ⚡ Transfer Custody
+                      <button className="button button-primary" onClick={() => setShowTransfer(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <Zap size={14} /> Transfer Custody
                       </button>
                     ) : (
                       <button
@@ -394,15 +405,16 @@ export default function EvidenceInspector({
                           openLockModal('Chain of Custody Transfer', 'investigator', () => setShowTransfer(true))
                         }
                         title="Restricted: Requires Law Enforcement Investigator clearance (PIN 1001)"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        🔒 Transfer Custody
+                        <Lock size={14} /> Transfer Custody
                       </button>
                     )}
 
                     {evidence.mime_type?.startsWith('image/') &&
                       (hasPermission('ela_heatmap') ? (
-                        <button className="button button-secondary" onClick={() => setShowELA(true)}>
-                          🔬 ELA Heatmap
+                        <button className="button button-secondary" onClick={() => setShowELA(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <Microscope size={14} /> ELA Heatmap
                         </button>
                       ) : (
                         <button
@@ -412,15 +424,16 @@ export default function EvidenceInspector({
                             openLockModal('Error Level Analysis Heatmap', 'forensic_analyst', () => setShowELA(true))
                           }
                           title="Restricted: Requires Forensic Analyst clearance (PIN 2002)"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         >
-                          🔒 ELA Heatmap
+                          <Lock size={14} /> ELA Heatmap
                         </button>
                       ))}
 
                     {(evidence.mime_type?.startsWith('audio/') || evidence.mime_type?.startsWith('video/') || evidence.mime_type === 'application/pdf') &&
                       (hasPermission('transcript') ? (
-                        <button className="button button-secondary" onClick={() => setShowTranscript(true)}>
-                          {evidence.mime_type === 'application/pdf' ? '📄 Document Text' : '🎙 Transcript'}
+                        <button className="button button-secondary" onClick={() => setShowTranscript(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          {evidence.mime_type === 'application/pdf' ? <><FileText size={14} /> Document Text</> : <><Mic size={14} /> Transcript</>}
                         </button>
                       ) : (
                         <button
@@ -434,8 +447,9 @@ export default function EvidenceInspector({
                             )
                           }
                           title="Restricted: Requires Forensic Analyst clearance (PIN 2002)"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                         >
-                          🔒 {evidence.mime_type === 'application/pdf' ? 'Document Text' : 'Transcript'}
+                          <Lock size={14} /> {evidence.mime_type === 'application/pdf' ? 'Document Text' : 'Transcript'}
                         </button>
                       ))}
 
@@ -445,8 +459,9 @@ export default function EvidenceInspector({
                         className="button button-secondary"
                         onClick={() => window.open(`${API_BASE}/api/v1/evidence/${evidenceId}/certificate`, '_blank')}
                         title="Generate and download court-admissible PDF certificate with QR verification"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        📜 Court Dossier
+                        <ScrollText size={14} /> Court Dossier
                       </button>
                     ) : (
                       <button
@@ -458,13 +473,27 @@ export default function EvidenceInspector({
                           )
                         }
                         title="Restricted: Requires Compliance Auditor clearance (PIN 3003)"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                       >
-                        🔒 Court Dossier
+                        <Lock size={14} /> Court Dossier
                       </button>
                     )}
 
-                    <button className="button button-secondary" onClick={copyShareLink}>
-                      {copied ? '✓ Link Copied!' : '🔗 Share Link'}
+                    <button
+                      className="button button-secondary"
+                      onClick={copyShareLink}
+                      title="Generate cryptographic time-bounded URL (Valid for 24 Hours via MinIO STS presigning)"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      {copied ? (
+                        <>
+                          <Check size={14} color="var(--emerald)" /> Link Copied (24h Valid)!
+                        </>
+                      ) : (
+                        <>
+                          <Share2 size={14} /> Share Link (24h)
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

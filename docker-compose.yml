@@ -37,6 +37,7 @@ services:
       WEB3_RPC_URL: ${WEB3_RPC_URL}
       CONTRACT_ADDRESS: ${CONTRACT_ADDRESS}
       WALLET_PRIVATE_KEY: ${WALLET_PRIVATE_KEY}
+      BLOCK_EXPLORER_URL: ${BLOCK_EXPLORER_URL:-https://coral.mstscan.com}
     ports: ["8000:8000"]
   frontend:
     build: ./frontend
@@ -44,6 +45,7 @@ services:
     ports: ["3000:3000"]
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_BLOCK_EXPLORER_URL: ${BLOCK_EXPLORER_URL:-https://coral.mstscan.com}
 volumes:
   postgres_data:
   minio_data:

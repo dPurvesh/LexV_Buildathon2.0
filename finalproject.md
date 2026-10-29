@@ -10,16 +10,21 @@
 LEXVAULT combines:
 1. **Client-side & Server-side Cryptographic Dual-Hashing** (SHA-256 & Perceptual Hashing)
 2. **Immutable WORM (Write-Once-Read-Many) Storage Vault** with 365-day compliance locks
-3. **Public Blockchain Anchoring** on the Ethereum Sepolia testnet for immutable timestamping and custody transition logs
+3. **Public Blockchain Anchoring** on the MST Blockchain (MST Coral Testnet / Mainnet) for immutable timestamping and custody transition logs
 4. **Deep Multi-Modal Forensic Tamper Engine**:
+   - **🔴 Direct Red Tamper Localization & Bounding Box Engine**: Pinpoints the exact modified/spliced pixels by overlaying a vivid semi-transparent red highlight (`rgba(239, 68, 68, 0.55)`) onto altered areas, generates OpenCV contour bounding boxes labeled `ALTERED` / `ANOMALY`, and reports exact altered pixel percentages (e.g. `4.17%`) with bounding box coordinates.
    - **Perceptual Hash Matching (pHash)**: 64-bit DCT perceptual hashing capable of identifying modified/cropped/spliced derivatives even when the cryptographic SHA-256 has completely diverged.
-   - **Interactive Split Slider**: Real-time canvas overlay comparing original clean vault evidence against modified uploads.
-   - **Pixel Difference Heatmaps**: Direct pixel delta highlighting exact spliced regions.
-   - **Error Level Analysis (ELA)**: OpenCV compression disparity analysis detecting JPEG resave artifacts and clone stamping.
+   - **3-Way Interactive Split Slider**: Real-time canvas overlay allowing users to toggle between:
+     1. `🔴 Original vs Red Tamper Highlight` (swipe across pristine vault baseline to reveal red alterations)
+     2. `Original Vault vs Uploaded`
+     3. `Uploaded vs ELA Heatmap`
+   - **Dual-Mode ELA Viewer**: Switch between **`🔴 Red Anomaly Mask`** (direct anomaly overlay with bounding boxes) and **`🌡️ Thermal Spectrum`** (classic multi-color JET colormap), computed dynamically on-demand from MinIO.
+   - **Pixel Difference Heatmaps**: Direct pixel delta highlighting exact spliced regions in thermal spectrum.
    - **PDF Document Text Diff**: Textual sequence alignment (`difflib`) highlighting additions in green and deletions in red.
-5. **Pre-Ingestion Tamper Screening**: Warns investigators before vault entry if a file is an altered derivative of existing evidence, flagging it as `is_tampered = TRUE` and alerting the dashboard.
-6. **Section 65B Indian Evidence Act Court Dossier Generator** producing cryptographically verified PDF certificates with dynamic verification QR codes.
-7. **Handcrafted Glassmorphism Command Center** designed with modern typography (Inter + Fira Code), dynamic blurred frosted panels, and responsive status telemetry.
+5. **Pre-Ingestion Tamper Screening & MST Blockchain Consensus**: Warns investigators before vault entry if a file is an altered derivative of existing evidence, flagging it as `is_tampered = TRUE`, logging `INTAKE_TAMPER_FLAGGED`, and presenting live MST Blockchain validator consensus progress (~12–25s block time).
+6. **Repository & Semantic Discovery**: Instant **`✕ Clear Filter`** button, 1-click semantic topic chips, and graceful zero-match guidance.
+7. **Section 65B Indian Evidence Act Court Dossier Generator** producing cryptographically verified PDF certificates with dynamic verification QR codes.
+8. **Handcrafted Glassmorphism Command Center** designed with modern typography (Inter + Fira Code), dynamic blurred frosted panels, and responsive status telemetry.
 
 ---
 
@@ -43,7 +48,7 @@ LEXVAULT combines:
          |                              |                              |                       |
          v                              v                              v                       v
 +------------------+          +------------------+          +--------------------+  +------------------+
-| PostgreSQL 16    |          | MinIO WORM       |          | Ethereum Sepolia   |  | Multi-Modal      |
+| PostgreSQL 16    |          | MinIO WORM       |          | MST Blockchain     |  | Multi-Modal      |
 | + pgvector       |          | S3 Object Vault  |          | Smart Contract     |  | Forensic Engine  |
 | Relational data, |          | 365-Day Retention|          | Immutable Proof of |  | pHash Matching,  |
 | custody logs,    |          | Compliance Lock, |          | Existence & State  |  | Pixel Diff, ELA, |
@@ -62,8 +67,8 @@ LEXVAULT combines:
 4. **Streaming Ingestion**: The file is streamed via multipart form data to FastAPI (`/api/v1/evidence/upload`). An internal `HashingStream` simultaneously computes the server-side SHA-256 digest without loading the entire payload into RAM.
 5. **Integrity Validation**: FastAPI compares the client-claimed digest with the server-computed digest. Any mismatch immediately aborts the transaction (HTTP 400).
 6. **WORM Vault Lock**: The stream is saved to MinIO in the `evidence-vault` bucket configured with Object Lock in `COMPLIANCE` mode for 365 days. Files cannot be deleted, renamed, or modified—even by root administrators.
-7. **Blockchain Registration**: The SHA-256 hash, title, and custodian identifier are submitted via Web3.py to the `EvidenceLedger` smart contract deployed on the Ethereum Sepolia testnet. If already registered, it reuses the on-chain anchor gracefully.
-8. **Database Persistence**: Metadata, file size, MIME type, hashes, custody state, tamper status, and Ethereum receipt are stored in PostgreSQL 16.
+7. **Blockchain Registration**: The SHA-256 hash, title, and custodian identifier are submitted via Web3.py to the `EvidenceLedger` smart contract deployed on the MST Blockchain (MST Coral Testnet / Mainnet). If already registered, it reuses the on-chain anchor gracefully.
+8. **Database Persistence**: Metadata, file size, MIME type, hashes, custody state, tamper status, and MST receipt are stored in PostgreSQL 16.
 9. **Initial Custody Log**: An inaugural record (`INITIAL_INGESTION` or `INTAKE_TAMPER_FLAGGED`) is created in `custody_history`.
 10. **Asynchronous Multimodal AI Worker**:
     - **For Images**: Computes 64-bit Perceptual Hash (pHash) and generates Error Level Analysis (ELA) compression difference heatmaps using OpenCV.
@@ -85,8 +90,8 @@ LEXVAULT combines:
 | **Relational Database** | PostgreSQL | 16.x | Enterprise ACID database for relational foreign keys, custody history sequences, and JSONB forensic records. |
 | **Vector Engine** | pgvector | 0.7.x | Vector similarity search engine running directly inside Postgres; enables cosine distance similarity over 512-dim CLIP vectors. |
 | **Object Storage** | MinIO | S3 API | Self-hosted S3-compatible storage with SEC Rule 17a-4 compliant WORM (Write-Once-Read-Many) Object Lock and Retention. |
-| **Blockchain** | Ethereum (Sepolia) | EVM | Public decentralized ledger anchoring evidence hashes; provides mathematically irrefutable proof-of-existence and non-repudiation. |
-| **Web3 Client** | Web3.py | 7.x | Python library for interacting with the Sepolia RPC node, compiling contract ABIs, signing raw transactions, and tracking block confirmations. |
+| **Blockchain** | MST Blockchain | EVM (Coral 54635 / Testnet 91562037 / Mainnet 4646) | Public decentralized EVM ledger anchoring evidence hashes; provides mathematically irrefutable proof-of-existence on MSTScan. |
+| **Web3 Client** | Web3.py | 7.x | Python library for interacting with the MST Blockchain RPC node, compiling contract ABIs, signing raw transactions, and tracking block confirmations. |
 | **Perceptual Hashing** | imagehash (DCT) | 4.3+ | 64-bit Discrete Cosine Transform perceptual hashing for detecting modified derivatives via Hamming bit distance. |
 | **Image Forensics** | OpenCV & Pillow | 4.10+ / 10.4+ | Error Level Analysis (ELA) resave differential calculations, pixel diff heatmaps, and JET false-color mapping. |
 | **Document Forensics** | pypdf & difflib | 5.0+ | Text extraction and line-by-line sequence differential analysis for altered PDF contracts and affidavits. |
@@ -160,8 +165,8 @@ CREATE TABLE evidence_ai_index (
 ## 5. API Endpoints Catalog
 
 ### Evidence Management (`/api/v1/evidence`)
-- `POST /upload`: Multipart upload with client SHA-256 verification, pre-ingestion derivative screening, MinIO WORM storage, Sepolia anchoring, and DB entry.
-- `POST /verify`: Deep multi-modal verification supporting binary file upload or SHA-256 JSON body. Executes exact cryptographic matching, perceptual hash comparison (pHash Hamming distance $\le 15$), Error Level Analysis (ELA) heatmap generation, direct visual pixel diffing (`diff_heatmap_b64`), PDF text diffing (`difflib`), and detection of registered records flagged as tampered.
+- `POST /upload`: Multipart upload with client SHA-256 verification, pre-ingestion derivative screening, MinIO WORM storage, MST Blockchain anchoring, and DB entry.
+- `POST /verify`: Deep multi-modal verification supporting binary file upload or SHA-256 JSON body. Executes exact cryptographic matching, perceptual hash comparison (pHash Hamming distance $\le 15$), Error Level Analysis (ELA) heatmap generation, direct visual pixel diffing (`diff_heatmap_b64`), direct red tamper highlight overlay with OpenCV bounding boxes (`red_overlay_b64`), tamper coordinates (`tamper_boxes`), altered pixel area ratio (`changed_pixels_ratio`), PDF text diffing (`difflib`), and detection of registered records flagged as tampered.
 - `GET /list`: Paginated evidence listing with search filter, case filter, and tamper indicators.
 - `GET /{evidence_id}/detail`: Complete evidentiary record including on-chain transaction hash and perceptual hash.
 - `POST /{evidence_id}/custody`: Executes a legal custody transfer, recording a new custody event and optional blockchain transition.
@@ -171,7 +176,7 @@ CREATE TABLE evidence_ai_index (
 - `GET /{evidence_id}/certificate`: Streams a Court Dossier Section 65B Certificate as a generated PDF with embedded QR code.
 
 ### Forensic Analysis (`/api/v1/forensics`)
-- `GET /{evidence_id}/ela-heatmap`: Generates an on-the-fly Error Level Analysis (ELA) compression heatmap (JPEG 95% differential with JET colormap).
+- `GET /{evidence_id}/ela-heatmap`: Generates an on-the-fly Error Level Analysis (ELA) compression heatmap and direct red anomaly mask with OpenCV bounding boxes (`red_overlay_b64`, `tamper_boxes`, `heatmap_b64`, `tamper_score`, `phash`).
 - `GET /{evidence_id}/transcript`: Returns the complete audio transcription with word-by-word timestamp markers.
 
 ### Search Engine (`/api/v1/search`)
@@ -182,7 +187,7 @@ CREATE TABLE evidence_ai_index (
 - `GET /cases`: Grouped portfolio metrics by `case_number` including evidence count, latest upload timestamp, and tamper flags.
 
 ### Blockchain Telemetry (`/api/v1/blockchain`)
-- `GET /status`: Live status of Ethereum Sepolia connection, Chain ID (`11155111`), latest block number, and relayer wallet balance.
+- `GET /status`: Live status of MST Blockchain connection, Chain ID (`54635` / `4646`), latest block number, relayer wallet balance, and MSTScan explorer URL.
 
 ### Maintenance Utilities (`backend/scripts`)
 - `python scripts/purge_all.py`: Complete teardown and clean slate reset of all evidence records in PostgreSQL, MinIO S3 object buckets, and custody histories.
@@ -242,5 +247,5 @@ Adheres to international guidelines for digital evidence collection and preserva
 - **PostgreSQL Database**: `localhost:5432` (`forensic_admin` / `secure_password` / `evidence_db`)
 - **MinIO Object Vault Console**: `http://localhost:9001` (`minio_admin` / `minio_secure_password`)
 - **MinIO S3 API**: `http://localhost:9000`
-- **Ethereum Network**: Sepolia Testnet (Chain ID `11155111`)
+- **Blockchain Network**: MST Blockchain (Coral Testnet `54635` / Testnet `91562037` / Mainnet `4646`)
 - **Docker Compose Services**: `erinew-backend-1`, `erinew-frontend-1`, `erinew-database-1`, `erinew-minio-1`

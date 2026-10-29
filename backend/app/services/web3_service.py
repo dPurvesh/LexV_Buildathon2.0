@@ -12,6 +12,31 @@ from web3.contract import Contract
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "web3_config.json"
 
 
+def get_mst_network_info(chain_id: int | None = None) -> tuple[str, str]:
+    """
+    Detect network name and block explorer URL based on chain_id and environment.
+    - Chain ID 54635 -> MST Coral Testnet (https://coral.mstscan.com)
+    - Chain ID 91562037 -> MST Testnet (https://testnet.mstscan.com)
+    - Chain ID 4646 -> MST Mainnet (https://mstscan.com)
+    """
+    env_explorer = os.getenv("BLOCK_EXPLORER_URL", "").strip().rstrip("/")
+    if chain_id == 54635:
+        name = "MST Coral Testnet"
+        default_explorer = "https://coral.mstscan.com"
+    elif chain_id == 91562037:
+        name = "MST Testnet"
+        default_explorer = "https://testnet.mstscan.com"
+    elif chain_id == 4646:
+        name = "MST Mainnet"
+        default_explorer = "https://mstscan.com"
+    else:
+        name = f"MST Network ({chain_id})" if chain_id else "MST Coral Testnet"
+        default_explorer = "https://coral.mstscan.com"
+
+    explorer = env_explorer if env_explorer else default_explorer
+    return name, explorer
+
+
 class Web3ServiceError(RuntimeError):
     """Raised when blockchain configuration or execution is unavailable."""
 
@@ -98,7 +123,7 @@ def register_evidence_on_chain(
     try:
         exists, current_custodian, registered_at = contract.functions.verifyEvidence(h_bytes).call()
         if exists:
-            # Evidence hash is already permanently registered on Ethereum Sepolia
+            # Evidence hash is already permanently registered on MST Blockchain
             tx_hex = f"0x{evidence_hash}"
             try:
                 latest = web3.eth.block_number
@@ -120,6 +145,8 @@ def register_evidence_on_chain(
     except Exception:
         pass
 
+    chain_id = web3.eth.chain_id
+    gas_price = web3.eth.gas_price
     tx = contract.functions.registerEvidence(
         h_bytes,
         web3.to_checksum_address(initial_custodian),
@@ -128,9 +155,9 @@ def register_evidence_on_chain(
         {
             "from": account.address,
             "nonce": web3.eth.get_transaction_count(account.address),
-            "chainId": web3.eth.chain_id,
+            "chainId": chain_id,
             "gas": 300000,
-            "gasPrice": web3.eth.gas_price,
+            "gasPrice": gas_price,
         }
     )
     signed = account.sign_transaction(tx)
@@ -147,6 +174,8 @@ def transfer_custody_on_chain(
     web3 = _web3()
     contract = _contract(web3)
     account = _account(web3)
+    chain_id = web3.eth.chain_id
+    gas_price = web3.eth.gas_price
     tx = contract.functions.transferCustody(
         _hash_bytes32(web3, evidence_hash),
         web3.to_checksum_address(from_custodian),
@@ -155,9 +184,9 @@ def transfer_custody_on_chain(
         {
             "from": account.address,
             "nonce": web3.eth.get_transaction_count(account.address),
-            "chainId": web3.eth.chain_id,
+            "chainId": chain_id,
             "gas": 250000,
-            "gasPrice": web3.eth.gas_price,
+            "gasPrice": gas_price,
         }
     )
     signed = account.sign_transaction(tx)
@@ -185,16 +214,40 @@ def _mock_transaction(evidence_hash: str, operation: str) -> dict[str, Any]:
 
 
 def blockchain_status() -> dict[str, Any]:
+    config = _load_config()
+    contract_addr = os.getenv("CONTRACT_ADDRESS", config.get("contract_address", "")).strip()
     provider_url = _provider_url()
     if not provider_url:
-        return {"connected": False, "configured": False, "error": "WEB3_RPC_URL is not configured"}
+        network_name, explorer_url = get_mst_network_info(None)
+        return {
+            "connected": False,
+            "configured": False,
+            "chain_id": None,
+            "latest_block": None,
+            "relayer_address": None,
+            "relayer_balance_eth": 0.0,
+            "contract_address": contract_addr,
+            "mock_mode": True,
+            "network_name": network_name,
+            "explorer_url": explorer_url,
+            "error": "WEB3_RPC_URL is not configured",
+        }
     try:
         web3 = _web3()
+        chain_id = web3.eth.chain_id
+        network_name, explorer_url = get_mst_network_info(chain_id)
+        mock_mode = bool(config.get("mock", False)) or provider_url.lower().startswith(
+            ("mock://", "http://127.0.0.1", "http://localhost")
+        )
         status: dict[str, Any] = {
             "connected": True,
             "configured": True,
-            "chain_id": web3.eth.chain_id,
+            "chain_id": chain_id,
             "latest_block": web3.eth.block_number,
+            "contract_address": contract_addr,
+            "mock_mode": mock_mode,
+            "network_name": network_name,
+            "explorer_url": explorer_url,
         }
         private_key = os.getenv("WALLET_PRIVATE_KEY", "").strip()
         if private_key:
@@ -203,7 +256,22 @@ def blockchain_status() -> dict[str, Any]:
             status["relayer_balance_wei"] = web3.eth.get_balance(account.address)
             status["relayer_balance_eth"] = float(web3.from_wei(status["relayer_balance_wei"], "ether"))
         else:
+            status["relayer_address"] = None
+            status["relayer_balance_eth"] = 0.0
             status["relayer_configured"] = False
         return status
-    except Web3ServiceError as error:
-        return {"connected": False, "configured": True, "error": str(error)}
+    except (Web3ServiceError, Exception) as error:
+        network_name, explorer_url = get_mst_network_info(None)
+        return {
+            "connected": False,
+            "configured": True,
+            "chain_id": None,
+            "latest_block": None,
+            "relayer_address": None,
+            "relayer_balance_eth": 0.0,
+            "contract_address": contract_addr,
+            "mock_mode": True,
+            "network_name": network_name,
+            "explorer_url": explorer_url,
+            "error": str(error),
+        }

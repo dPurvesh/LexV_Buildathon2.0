@@ -100,9 +100,34 @@ def generate_ela_heatmap_b64(image_bytes: bytes, max_dim: int = 1200) -> dict[st
     original.save(original_out, format="PNG")
     original_b64 = base64.b64encode(original_out.getvalue()).decode("ascii")
 
+    # Red Tamper Mask Overlay with Bounding Box
+    orig_np = np.array(original, dtype=np.uint8)
+    thresh_val = max(55, int(np.percentile(gray, 92)))
+    mask = gray > thresh_val
+    overlay = orig_np.copy()
+    overlay[mask] = [239, 68, 68]
+    blended = cv2.addWeighted(orig_np, 0.45, overlay, 0.55, 0)
+
+    contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    tamper_boxes = []
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area > 80:
+            x, y, w, h = cv2.boundingRect(cnt)
+            tamper_boxes.append({"x": int(x), "y": int(y), "w": int(w), "h": int(h), "area": int(area)})
+            cv2.rectangle(blended, (x, y), (x + w, y + h), (239, 68, 68), 2)
+            cv2.putText(blended, "ANOMALY", (x, max(y - 6, 12)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (239, 68, 68), 1, cv2.LINE_AA)
+
+    red_img = Image.fromarray(blended)
+    red_out = BytesIO()
+    red_img.save(red_out, format="PNG")
+    red_overlay_b64 = base64.b64encode(red_out.getvalue()).decode("ascii")
+
     return {
         "original_b64": original_b64,
         "heatmap_b64": heatmap_b64,
+        "red_overlay_b64": red_overlay_b64,
+        "tamper_boxes": tamper_boxes,
         "tamper_score": analysis["tamper_score"],
         "is_tampered": analysis["is_tampered"],
         "phash": analysis["phash"],
@@ -152,14 +177,37 @@ def generate_visual_diff_heatmap_b64(
         heatmap_img.save(diff_out, format="PNG")
         diff_b64 = base64.b64encode(diff_out.getvalue()).decode("ascii")
 
+        # Red Tamper Mask Overlay with Bounding Box
+        mask = diff_gray > 15
+        overlay = mod_np.copy()
+        overlay[mask] = [239, 68, 68]
+        blended = cv2.addWeighted(mod_np, 0.45, overlay, 0.55, 0)
+
+        contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        tamper_boxes = []
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > 35:
+                x, y, w, h = cv2.boundingRect(cnt)
+                tamper_boxes.append({"x": int(x), "y": int(y), "w": int(w), "h": int(h), "area": int(area)})
+                cv2.rectangle(blended, (x, y), (x + w, y + h), (239, 68, 68), 2)
+                cv2.putText(blended, "ALTERED", (x, max(y - 6, 12)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (239, 68, 68), 1, cv2.LINE_AA)
+
+        red_img = Image.fromarray(blended)
+        red_out = BytesIO()
+        red_img.save(red_out, format="PNG")
+        red_b64 = base64.b64encode(red_out.getvalue()).decode("ascii")
+
         orig_out = BytesIO()
         orig.save(orig_out, format="PNG")
         orig_b64 = base64.b64encode(orig_out.getvalue()).decode("ascii")
 
         return {
             "diff_heatmap_b64": diff_b64,
+            "red_overlay_b64": red_b64,
             "original_b64": orig_b64,
             "changed_pixels_ratio": round(changed_pixels, 4),
+            "tamper_boxes": tamper_boxes,
         }
     except Exception:
         return None

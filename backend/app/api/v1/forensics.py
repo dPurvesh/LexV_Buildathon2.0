@@ -12,6 +12,8 @@ from minio import Minio
 from PIL import Image, ImageChops, ImageEnhance
 
 
+from app.services.forensic_service import generate_ela_heatmap_b64
+
 router = APIRouter(prefix="/api/v1/forensics", tags=["forensics"])
 BUCKET_NAME = "evidence-vault"
 
@@ -63,50 +65,18 @@ def get_ela_heatmap(evidence_id: str) -> dict[str, Any]:
         )
 
     image_bytes = _download_from_minio(evidence["minio_object_key"])
-    original = Image.open(BytesIO(image_bytes)).convert("RGB")
-
-    # Resize for performance if very large
-    max_dim = 1200
-    if max(original.size) > max_dim:
-        ratio = max_dim / max(original.size)
-        new_size = (int(original.width * ratio), int(original.height * ratio))
-        original = original.resize(new_size, Image.LANCZOS)
-
-    # ELA: recompress at quality 90 and compute difference
-    ela_buf = BytesIO()
-    original.save(ela_buf, format="JPEG", quality=90)
-    ela_buf.seek(0)
-    recompressed = Image.open(ela_buf).convert("RGB")
-
-    difference = ImageChops.difference(original, recompressed)
-    extrema = difference.getextrema()
-    scale = max(max(ch) for ch in extrema) or 1
-    enhanced = ImageEnhance.Brightness(difference).enhance(255 / scale)
-
-    # Convert to heatmap with OpenCV JET color mapping
-    gray = cv2.cvtColor(np.array(enhanced, dtype=np.uint8), cv2.COLOR_RGB2GRAY)
-    heatmap_bgr = cv2.applyColorMap(gray, cv2.COLORMAP_JET)
-    heatmap_rgb = cv2.cvtColor(heatmap_bgr, cv2.COLOR_BGR2RGB)
-    heatmap_img = Image.fromarray(heatmap_rgb)
-
-    # Encode heatmap as base64 PNG
-    heatmap_out = BytesIO()
-    heatmap_img.save(heatmap_out, format="PNG")
-    heatmap_b64 = base64.b64encode(heatmap_out.getvalue()).decode("ascii")
-
-    # Encode original as base64 PNG for side-by-side comparison
-    original_out = BytesIO()
-    original.save(original_out, format="PNG")
-    original_b64 = base64.b64encode(original_out.getvalue()).decode("ascii")
+    ela_data = generate_ela_heatmap_b64(image_bytes)
 
     return {
         "evidence_id": evidence_id,
-        "original_b64": original_b64,
-        "heatmap_b64": heatmap_b64,
-        "tamper_score": evidence.get("tamper_score", 0.0),
-        "phash": evidence.get("phash"),
-        "width": original.width,
-        "height": original.height,
+        "original_b64": ela_data["original_b64"],
+        "heatmap_b64": ela_data["heatmap_b64"],
+        "red_overlay_b64": ela_data.get("red_overlay_b64"),
+        "tamper_boxes": ela_data.get("tamper_boxes", []),
+        "tamper_score": evidence.get("tamper_score") or ela_data.get("tamper_score", 0.0),
+        "phash": evidence.get("phash") or ela_data.get("phash"),
+        "width": ela_data.get("width", 800),
+        "height": ela_data.get("height", 600),
     }
 
 

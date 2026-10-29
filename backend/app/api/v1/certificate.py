@@ -214,7 +214,7 @@ def generate_certificate(evidence_id: str) -> StreamingResponse:
     blockchain_data = [
         ["Transaction Hash", tx_hash or "Not available"],
         ["Block Number", str(evidence.get("block_number", "N/A"))],
-        ["Mode", "Mock Chain (Local)" if is_mock else "Sepolia Testnet"],
+        ["Mode", "Mock Chain (Local)" if is_mock else "MST Blockchain"],
     ]
     blockchain_table = Table(blockchain_data, colWidths=[1.8 * inch, 5.2 * inch])
     blockchain_table.setStyle(
@@ -297,15 +297,26 @@ def generate_certificate(evidence_id: str) -> StreamingResponse:
     elements.append(Spacer(1, 16))
 
     # ── QR Code ──
-    qr_data = json.dumps(
-        {
-            "system": "LEXVAULT",
-            "evidence_id": str(evidence["id"]),
-            "sha256": evidence["sha256_hash"],
-            "case": evidence["case_number"],
-        }
+    tx_hash = (evidence.get("eth_tx_hash") or "").strip()
+    contract_address = os.getenv("CONTRACT_ADDRESS", "0xBAcf6657787766176CFBdE238666bb9b84feb737").strip()
+    explorer_base = os.getenv("BLOCK_EXPLORER_URL", "https://coral.mstscan.com").rstrip("/")
+
+    if tx_hash.startswith("0x") and len(tx_hash) > 10:
+        qr_url = f"{explorer_base}/tx/{tx_hash}"
+    elif contract_address.startswith("0x"):
+        qr_url = f"{explorer_base}/address/{contract_address}"
+    else:
+        qr_url = f"{explorer_base}/search?q={evidence['sha256_hash']}"
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
     )
-    qr_img = qrcode.make(qr_data, box_size=4, border=2)
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="#000000", back_color="#ffffff")
     qr_buf = BytesIO()
     qr_img.save(qr_buf, format="PNG")
     qr_buf.seek(0)
@@ -313,14 +324,17 @@ def generate_certificate(evidence_id: str) -> StreamingResponse:
     qr_row = [
         [
             Paragraph(
-                "Scan this QR code to retrieve the evidence hash and ID for "
-                "independent verification against the LEXVAULT ledger.",
+                "<b>ON-CHAIN CRYPTOGRAPHIC PROOF (MST BLOCKCHAIN)</b><br/>"
+                "<font size=8 color='#334155'>Scan this QR code with any smartphone camera or QR reader to "
+                "instantly verify the immutable timestamp, block number, and custody settlement on the public ledger.</font><br/><br/>"
+                f"<font size=7.5 color='#1d4ed8'><u><link href=\"{qr_url}\">{qr_url}</link></u></font><br/>"
+                f"<font size=7 color='#64748b'>SHA-256 Digest: {evidence['sha256_hash'][:32]}...</font>",
                 normal_style,
             ),
-            RLImage(qr_buf, width=1.2 * inch, height=1.2 * inch),
+            RLImage(qr_buf, width=1.4 * inch, height=1.4 * inch),
         ]
     ]
-    qr_table = Table(qr_row, colWidths=[5.5 * inch, 1.5 * inch])
+    qr_table = Table(qr_row, colWidths=[5.4 * inch, 1.6 * inch])
     qr_table.setStyle(
         TableStyle(
             [
@@ -330,7 +344,7 @@ def generate_certificate(evidence_id: str) -> StreamingResponse:
         )
     )
     elements.append(qr_table)
-    elements.append(Spacer(1, 16))
+    elements.append(Spacer(1, 14))
 
     # ── Footer ──
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")

@@ -13,3 +13,5 @@ dist/
 build/
 .DS_Store
 *.log
+*.tsbuildinfo
+scratch/

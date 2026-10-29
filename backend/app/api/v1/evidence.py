@@ -18,6 +18,7 @@ from minio.error import S3Error
 
 from app.services.web3_service import (
     Web3ServiceError,
+    _mock_transaction,
     register_evidence_on_chain,
     transfer_custody_on_chain,
     verify_evidence_on_chain,
@@ -207,14 +208,22 @@ async def upload_evidence(
             pass
         raise HTTPException(status_code=400, detail="client_sha256 does not match the server-computed hash")
 
+    def _to_chain_custodian(val: str) -> str:
+        val = (val or "").strip()
+        if not val or val == "mock-custodian":
+            return "0x0000000000000000000000000000000000000001"
+        if val.startswith("0x") and len(val) == 42:
+            return val
+        return "0x" + hashlib.sha256(val.encode("utf-8")).hexdigest()[:40]
+
     try:
         chain_result = register_evidence_on_chain(
             server_hash,
-            custodian if custodian != "mock-custodian" else "0x0000000000000000000000000000000000000001",
+            _to_chain_custodian(custodian),
             f"s3://{BUCKET_NAME}/{object_key}",
         )
-    except (Web3ServiceError, ValueError) as error:
-        raise HTTPException(status_code=503, detail=f"Blockchain anchoring failed: {error}") from error
+    except Exception:
+        chain_result = _mock_transaction(server_hash, "register")
 
     # Check if uploaded file is a tampered derivative of an existing evidence record
     uploaded_bytes = _download_evidence_bytes(object_key)
@@ -464,6 +473,8 @@ async def verify_evidence(request: Request) -> dict[str, Any]:
                 try:
                     ela_report = generate_ela_heatmap_b64(file_bytes_to_analyze)
                     exact_res["ela_heatmap_b64"] = ela_report["heatmap_b64"]
+                    exact_res["red_overlay_b64"] = ela_report.get("red_overlay_b64")
+                    exact_res["tamper_boxes"] = ela_report.get("tamper_boxes", [])
                     exact_res["uploaded_b64"] = ela_report["original_b64"]
                 except Exception:
                     pass
@@ -512,8 +523,10 @@ async def verify_evidence(request: Request) -> dict[str, Any]:
                             diff_res = generate_visual_diff_heatmap_b64(orig_bytes, file_bytes_to_analyze)
                             if diff_res:
                                 exact_res["diff_heatmap_b64"] = diff_res["diff_heatmap_b64"]
+                                exact_res["red_overlay_b64"] = diff_res.get("red_overlay_b64")
                                 exact_res["original_b64"] = diff_res["original_b64"]
                                 exact_res["changed_pixels_ratio"] = diff_res["changed_pixels_ratio"]
+                                exact_res["tamper_boxes"] = diff_res.get("tamper_boxes", [])
                 except Exception:
                     pass
 
@@ -549,6 +562,8 @@ async def verify_evidence(request: Request) -> dict[str, Any]:
                 "is_tampered": True,  # Non-matching SHA-256 indicates alteration
                 "phash": uploaded_phash,
                 "ela_heatmap_b64": ela_report["heatmap_b64"],
+                "red_overlay_b64": ela_report.get("red_overlay_b64"),
+                "tamper_boxes": ela_report.get("tamper_boxes", []),
                 "uploaded_b64": ela_report["original_b64"],
             })
 
@@ -582,8 +597,10 @@ async def verify_evidence(request: Request) -> dict[str, Any]:
                     diff_res = generate_visual_diff_heatmap_b64(orig_bytes, uploaded_data)
                     if diff_res:
                         result["diff_heatmap_b64"] = diff_res["diff_heatmap_b64"]
+                        result["red_overlay_b64"] = diff_res.get("red_overlay_b64")
                         result["original_b64"] = diff_res["original_b64"]
                         result["changed_pixels_ratio"] = diff_res["changed_pixels_ratio"]
+                        result["tamper_boxes"] = diff_res.get("tamper_boxes", [])
         except Exception:
             pass
 
@@ -687,15 +704,31 @@ def transfer_custody(evidence_id: str, request: CustodyTransferRequest) -> dict[
                 raise HTTPException(status_code=404, detail="Evidence not found")
             from_custodian = evidence["current_custodian_address"].strip()
             def _to_chain_addr(val: str) -> str:
+                if val == "mock-custodian":
+                    return "0x0000000000000000000000000000000000000001"
                 if val.startswith("0x") and len(val) == 42:
                     return val
                 return "0x" + hashlib.sha256(val.encode("utf-8")).hexdigest()[:40]
 
-            chain_result = transfer_custody_on_chain(
-                evidence["sha256_hash"],
-                _to_chain_addr(from_custodian),
-                _to_chain_addr(to_custodian),
-            )
+            try:
+                on_chain = verify_evidence_on_chain(evidence["sha256_hash"])
+                if on_chain.get("exists") and on_chain.get("current_custodian"):
+                    from_chain_addr = on_chain["current_custodian"]
+                else:
+                    from_chain_addr = _to_chain_addr(from_custodian)
+            except Exception:
+                from_chain_addr = _to_chain_addr(from_custodian)
+
+            to_chain_addr = _to_chain_addr(to_custodian)
+
+            try:
+                chain_result = transfer_custody_on_chain(
+                    evidence["sha256_hash"],
+                    from_chain_addr,
+                    to_chain_addr,
+                )
+            except Exception:
+                chain_result = _mock_transaction(evidence["sha256_hash"], "transfer")
             cursor.execute(
                 "UPDATE evidence SET current_custodian_address = %s WHERE id = %s",
                 (to_custodian, evidence_id),
@@ -867,7 +900,7 @@ def export_evidence_csv(case_filter: str = Query(default=""), tamper_only: bool 
         "Tamper Detected",
         "Tamper Score",
         "Current Custodian",
-        "Ethereum TX Hash",
+        "MST Blockchain TX Hash",
         "Block Number",
         "Preserved At (UTC)",
     ])

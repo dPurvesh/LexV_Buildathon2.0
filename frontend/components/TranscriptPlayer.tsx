@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
@@ -69,7 +70,7 @@ export default function TranscriptPlayer({
             <h3>{isMedia ? 'Forensic Audio/Video Playback' : 'Indexed Text & Searchable Content'}</h3>
           </div>
           <button className="inspector-close" onClick={onClose}>
-            ✕
+            <X size={16} />
           </button>
         </div>
 

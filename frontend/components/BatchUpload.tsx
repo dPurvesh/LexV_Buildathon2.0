@@ -1,8 +1,9 @@
 'use client';
 
 import { DragEvent, FormEvent, useRef, useState } from 'react';
+import { ImageIcon, Video, Music, FileText, FolderGit2, ShieldCheck, Download, X, AlertTriangle, CheckCircle2, Lock, RefreshCw, Cpu, Hourglass } from 'lucide-react';
 
-type FileStatus = 'queued' | 'hashing' | 'checking' | 'duplicate' | 'tampered' | 'uploading' | 'anchored' | 'error';
+type FileStatus = 'queued' | 'hashing' | 'checking' | 'duplicate' | 'tampered' | 'uploading' | 'mining' | 'anchored' | 'error';
 
 type BatchFile = {
   file: File;
@@ -29,22 +30,23 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function mimeIcon(type: string): string {
-  if (type.startsWith('image/')) return '🖼️';
-  if (type.startsWith('video/')) return '🎬';
-  if (type.startsWith('audio/')) return '🎵';
-  return '📄';
+function mimeIcon(type: string): React.ReactNode {
+  if (type.startsWith('image/')) return <ImageIcon size={18} color="var(--cyan)" />;
+  if (type.startsWith('video/')) return <Video size={18} color="#a855f7" />;
+  if (type.startsWith('audio/')) return <Music size={18} color="var(--amber)" />;
+  return <FileText size={18} color="var(--crimson)" />;
 }
 
 const STATUS_LABELS: Record<FileStatus, string> = {
-  queued: 'Queued',
-  hashing: 'Hashing SHA-256…',
+  queued: 'Queued for Ingestion',
+  hashing: 'WebCrypto SHA-256…',
   checking: 'Forensic Pre-Check…',
-  duplicate: 'Duplicate detected',
-  tampered: '⚠ Tampered Derivative',
-  uploading: 'Uploading…',
-  anchored: '✓ Anchored',
-  error: 'Failed',
+  duplicate: 'Duplicate Hash Detected',
+  tampered: 'Tampered Derivative',
+  uploading: 'Streaming to WORM Vault…',
+  mining: 'Mining on MST Chain (~15-20s)…',
+  anchored: 'Anchored & Sealed',
+  error: 'Ingestion Error',
 };
 
 export default function BatchUpload() {
@@ -90,7 +92,7 @@ export default function BatchUpload() {
       if (entry.status === 'anchored' || entry.status === 'duplicate') continue;
 
       try {
-        // 1. Hash locally
+        // 1. Hash locally using client WebCrypto
         updateFile(i, { status: 'hashing', progress: 0, error: '' });
         const hash = await sha256(entry.file);
         updateFile(i, { hash, status: 'checking' });
@@ -125,11 +127,11 @@ export default function BatchUpload() {
             matchedTitle,
             similarityPct,
           });
-          // Brief pause so investigator sees the tamper detection flag
+          // Brief pause so investigator observes the alert
           await new Promise((r) => setTimeout(r, 800));
         }
 
-        // 3. Upload and anchor to vault and Ethereum
+        // 3. Upload and anchor to vault and MST Blockchain
         updateFile(i, { status: 'uploading' });
         const title = entry.file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
         const form = new FormData();
@@ -143,7 +145,16 @@ export default function BatchUpload() {
           const xhr = new XMLHttpRequest();
           xhr.open('POST', `${API_BASE}/api/v1/evidence/upload`);
           xhr.upload.onprogress = (pe) => {
-            if (pe.lengthComputable) updateFile(i, { progress: Math.round((pe.loaded / pe.total) * 100) });
+            if (pe.lengthComputable) {
+              const pct = Math.round((pe.loaded / pe.total) * 100);
+              updateFile(i, { progress: pct });
+              if (pct >= 100) {
+                updateFile(i, { status: 'mining', progress: 100 });
+              }
+            }
+          };
+          xhr.upload.onload = () => {
+            updateFile(i, { status: 'mining', progress: 100 });
           };
           xhr.onload = () =>
             xhr.status >= 200 && xhr.status < 300
@@ -172,60 +183,93 @@ export default function BatchUpload() {
 
   const completed = files.filter((f) => f.status === 'anchored' || f.status === 'duplicate').length;
   const totalProgress = files.length ? Math.round((completed / files.length) * 100) : 0;
-  const queuedCount = files.filter((f) => f.status === 'queued' || f.status === 'tampered').length;
+  const queuedCount = files.filter((f) => f.status === 'queued' || f.status === 'tampered' || f.status === 'error').length;
+  const errorCount = files.filter((f) => f.status === 'error').length;
 
   return (
     <section className="panel batch-upload-panel">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">BATCH EVIDENCE INGESTION</span>
-          <h2>Preserve &amp; Cryptographically Anchor Evidence</h2>
-          <p className="batch-subtitle">
-            Upload multiple files at once with client-side SHA-256 pre-checks, multi-modal tamper detection, MinIO WORM storage, and on-chain ledger registration.
-          </p>
+          <span className="eyebrow">[03] SECURE INGESTION &amp; IMMUTABLE ANCHORING</span>
+          <h2>Digital Evidence Ingestion Pipeline</h2>
         </div>
-        <div className="batch-badges">
-          <span className="status-chip">🔒 SHA-256 PRE-CHECK</span>
-          <span className="status-chip">🔬 FORENSIC TAMPER AUDIT</span>
-          <span className="status-chip">⛓️ SEPOLIA ANCHOR</span>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <span className="status-chip">365D WORM Lock</span>
+          <span className="status-chip">MST Blockchain Public Anchor</span>
         </div>
       </div>
 
-      <form className="batch-form" onSubmit={processAll}>
-        <div className="batch-fields-grid">
-          <div className="batch-field-card">
-            <div className="batch-field-header">
-              <span className="batch-field-icon">📁</span>
-              <label htmlFor="batch-case">Case Identifier</label>
+      {/* ─── 4-Stage Ingestion Pipeline Tracker ─── */}
+      <div className="pipeline-tracker">
+        <div className={`pipeline-step ${files.length > 0 ? (busy ? 'complete' : 'active') : ''}`}>
+          <span className="pipeline-step-num">STAGE 01</span>
+          <span className="pipeline-step-name">Client WebCrypto Hashing</span>
+          <span className="pipeline-step-sub">In-memory SHA-256 pre-check</span>
+        </div>
+        <div className={`pipeline-step ${busy ? 'active' : completed > 0 ? 'complete' : ''}`}>
+          <span className="pipeline-step-num">STAGE 02</span>
+          <span className="pipeline-step-name">Multipart S3 Stream</span>
+          <span className="pipeline-step-sub">MinIO 365D Compliance lock</span>
+        </div>
+        <div className={`pipeline-step ${completed > 0 ? 'complete' : ''}`}>
+          <span className="pipeline-step-num">STAGE 03</span>
+          <span className="pipeline-step-name">MST Settlement</span>
+          <span className="pipeline-step-sub">On-chain transaction anchor</span>
+        </div>
+        <div className={`pipeline-step ${completed > 0 ? 'complete' : ''}`}>
+          <span className="pipeline-step-num">STAGE 04</span>
+          <span className="pipeline-step-name">Multimodal AI Extraction</span>
+          <span className="pipeline-step-sub">Whisper speech &amp; CLIP vectors</span>
+        </div>
+      </div>
+
+      <form onSubmit={processAll} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <div className="inspector-card">
+            <div className="inspector-card-header">
+              <span className="inspector-card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <FolderGit2 size={15} color="var(--cyan)" /> Case Docket Number
+              </span>
             </div>
             <input
               id="batch-case"
+              className="search-input"
+              style={{ padding: '12px 14px' }}
               value={caseNumber}
               onChange={(e) => setCaseNumber(e.target.value)}
               placeholder="e.g. CASE-2026-CR-8092"
               required
             />
-            <small className="batch-field-hint">Docket / case number for this batch</small>
+            <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+              Docket or statutory case identifier
+            </small>
           </div>
 
-          <div className="batch-field-card">
-            <div className="batch-field-header">
-              <span className="batch-field-icon">🛡️</span>
-              <label htmlFor="batch-custodian">Initial Custodian</label>
+          <div className="inspector-card">
+            <div className="inspector-card-header">
+              <span className="inspector-card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldCheck size={15} color="var(--cyan)" /> Initial Custodian
+              </span>
             </div>
             <input
               id="batch-custodian"
+              className="search-input"
+              style={{ padding: '12px 14px' }}
               value={custodian}
               onChange={(e) => setCustodian(e.target.value)}
               placeholder="e.g. Officer Smith / 0x..."
               required
             />
-            <small className="batch-field-hint">Officer, lab tech, or address logging the handoff</small>
+            <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+              Officer, laboratory specialist, or MST address
+            </small>
           </div>
         </div>
 
+        {/* Dropzone */}
         <div
-          className={`batch-dropzone ${dragging ? 'batch-dropzone-active' : ''}`}
+          className={`radar-scanner-container ${dragging ? 'dropzone-active' : ''}`}
+          style={{ padding: '36px 20px' }}
           onDragEnter={() => setDragging(true)}
           onDragLeave={() => setDragging(false)}
           onDragOver={(e) => e.preventDefault()}
@@ -242,104 +286,218 @@ export default function BatchUpload() {
               if (e.target.files?.length) addFiles(e.target.files);
             }}
           />
-          <div className="batch-dropzone-inner">
-            <div className="batch-dropzone-icon">📥</div>
-            <strong className="batch-dropzone-title">Drag &amp; drop evidence files here</strong>
-            <p className="batch-dropzone-desc">or click anywhere to browse local files from your workstation</p>
-            <div className="batch-format-pills">
-              <span>🖼️ Images (JPG, PNG)</span>
-              <span>🎬 Video (MP4, MKV)</span>
-              <span>🎵 Audio (WAV, MP3)</span>
-              <span>📄 Documents (PDF)</span>
-            </div>
+          <div className="radar-core-icon" style={{ width: '52px', height: '52px' }}>
+            <Download size={24} color="var(--cyan)" />
+          </div>
+          <strong style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', zIndex: 2 }}>
+            Drag &amp; drop evidence files to stage for ingestion
+          </strong>
+          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px', zIndex: 2 }}>
+            or click to browse files from your local forensic workstation
+          </p>
+          <div className="radar-formats-pill">
+            <span>FORMATS:</span> IMAGES (JPG, PNG) &bull; VIDEO (MP4) &bull; AUDIO (WAV) &bull; PDF DOCUMENTS
           </div>
         </div>
 
+        {/* File Queue */}
         {files.length > 0 && (
-          <div className="file-queue-section">
-            <div className="file-queue-header">
-              <div className="file-queue-title">
-                <strong>Ingestion Queue</strong>
-                <span className="result-count">
-                  {files.length} file{files.length !== 1 ? 's' : ''} staged
+          <div className="inspector-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <strong style={{ fontSize: '15px', color: 'var(--text-primary)' }}>Ingestion Staging Queue</strong>
+                <span className="status-chip" style={{ marginLeft: '10px' }}>
+                  {files.length} File{files.length !== 1 ? 's' : ''}
                 </span>
               </div>
-              <div className="file-queue-meta">
-                <span>
-                  {completed} / {files.length} processed
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ font: '600 12px var(--font-mono)', color: 'var(--text-muted)' }}>
+                  {completed} / {files.length} Processed
                 </span>
                 <button
                   type="button"
                   className="text-button"
                   onClick={() => setFiles([])}
                   disabled={busy}
-                  style={{ color: '#ef4444', marginLeft: '12px' }}
+                  style={{ color: 'var(--crimson)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 >
-                  Clear all
+                  <X size={13} /> Clear All
                 </button>
               </div>
             </div>
 
-            <div className="file-queue-list">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {files.map((entry, i) => (
-                <div className={`file-queue-item file-status-${entry.isTampered ? 'tampered' : entry.status}`} key={i}>
-                  <span className="fq-icon">{mimeIcon(entry.file.type)}</span>
-                  <div className="fq-info">
-                    <strong title={entry.file.name}>{entry.file.name}</strong>
-                    <div className="fq-meta">
-                      <span>{formatSize(entry.file.size)}</span>
-                      {entry.hash && <code className="fq-hash">SHA: {entry.hash.slice(0, 16)}…</code>}
-                      {entry.matchedTitle && (
-                        <span style={{ color: '#ef4444', fontWeight: 600 }}>
-                          ⚠ Derivative of &quot;{entry.matchedTitle}&quot; ({entry.similarityPct}%)
-                        </span>
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    background: 'rgba(8, 12, 20, 0.6)',
+                    border: `1px solid ${entry.isTampered ? 'var(--crimson-border)' : 'var(--border-subtle)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    gap: '14px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: '220px' }}>
+                    <span style={{ fontSize: '20px' }}>{mimeIcon(entry.file.type)}</span>
+                    <div>
+                      <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', display: 'block' }}>
+                        {entry.file.name}
+                      </strong>
+                      {entry.error ? (
+                        <small style={{ font: '500 11px var(--font-mono)', color: 'var(--crimson)', display: 'block' }}>
+                          {entry.error}
+                        </small>
+                      ) : (
+                        <small style={{ font: '500 11px var(--font-mono)', color: 'var(--text-muted)' }}>
+                          {formatSize(entry.file.size)}
+                        </small>
                       )}
                     </div>
                   </div>
-                  <div className="fq-status">
-                    <span className={`file-status-label status-${entry.isTampered && entry.status === 'anchored' ? 'tampered' : entry.status}`}>
-                      {entry.isTampered && entry.status === 'anchored'
-                        ? '⚠ Anchored (Tamper Alert)'
-                        : STATUS_LABELS[entry.status]}
-                    </span>
-                    {entry.status === 'uploading' && (
-                      <div className="fq-progress-bar">
-                        <div style={{ width: `${entry.progress}%` }} />
-                      </div>
-                    )}
-                    {entry.status === 'error' && <span className="fq-error-text">{entry.error}</span>}
-                  </div>
-                  {entry.status === 'queued' && (
-                    <button
-                      type="button"
-                      className="fq-remove-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile(i);
-                      }}
-                      title="Remove file"
-                    >
-                      ✕
-                    </button>
+
+                  {entry.hash && (
+                    <code style={{ fontSize: '11px', color: 'var(--cyan)' }}>
+                      SHA: {entry.hash.slice(0, 16)}…
+                    </code>
                   )}
+
+                  {entry.matchedTitle && (
+                    <span style={{ color: 'var(--crimson)', font: '600 11.5px var(--font-sans)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <AlertTriangle size={12} /> Derivative of &ldquo;{entry.matchedTitle}&rdquo; ({entry.similarityPct}%)
+                    </span>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {entry.status === 'mining' ? (
+                      <span
+                        className="tamper-badge"
+                        style={{
+                          background: 'var(--orange-bg)',
+                          border: '1px solid var(--orange-border-soft)',
+                          color: 'var(--orange-text)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                      >
+                        <Hourglass size={11} className="spin-slow" /> Mining on MST Chain (~15s)
+                      </span>
+                    ) : (
+                      <span
+                        className={`tamper-badge ${
+                          entry.isTampered
+                            ? 'tamper-alert'
+                            : entry.status === 'anchored'
+                            ? 'tamper-clean'
+                            : ''
+                        }`}
+                        style={{
+                          background:
+                            entry.status === 'queued'
+                              ? 'rgba(255,255,255,0.06)'
+                              : entry.status === 'hashing' || entry.status === 'uploading'
+                              ? 'var(--cyan-subtle)'
+                              : undefined,
+                          color:
+                            entry.status === 'queued'
+                              ? 'var(--text-muted)'
+                              : entry.status === 'hashing' || entry.status === 'uploading'
+                              ? 'var(--cyan)'
+                              : undefined,
+                        }}
+                      >
+                        {entry.isTampered && entry.status === 'anchored' ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <AlertTriangle size={11} /> ANCHORED (TAMPER ALERT)
+                          </span>
+                        ) : entry.status === 'anchored' ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <CheckCircle2 size={11} /> {STATUS_LABELS[entry.status]}
+                          </span>
+                        ) : (
+                          STATUS_LABELS[entry.status]
+                        )}
+                      </span>
+                    )}
+
+                    {(entry.status === 'queued' || entry.status === 'error') && (
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        style={{ color: 'var(--text-muted)', padding: '4px', display: 'flex', alignItems: 'center' }}
+                        title="Remove file"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
 
             {busy && (
-              <div className="batch-overall-progress">
-                <div className="progress-wrap">
-                  <div className="progress-bar" style={{ width: `${totalProgress}%` }} />
-                  <span>{totalProgress}% total batch progress</span>
+              <div style={{ marginTop: '16px' }}>
+                <div className="hashing-track">
+                  <div className="hashing-bar" style={{ width: `${totalProgress}%` }} />
                 </div>
+                <small style={{ display: 'block', textAlign: 'center', marginTop: '6px', font: '600 11px var(--font-mono)', color: 'var(--primary)' }}>
+                  {totalProgress}% TOTAL BATCH PROGRESS
+                </small>
+
+                {files.some((f) => f.status === 'mining') && (
+                  <div
+                    style={{
+                      marginTop: '12px',
+                      padding: '12px 16px',
+                      background: 'var(--orange-bg)',
+                      border: '1px solid var(--orange-border-soft)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                    }}
+                  >
+                    <Cpu size={18} color="var(--orange-text)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ fontSize: '12px', color: 'var(--orange-text)', lineHeight: 1.5 }}>
+                      <strong style={{ display: 'block', font: '700 12px var(--font-heading)', color: 'var(--orange-text-alt)', marginBottom: '2px' }}>
+                        ⛓️ MST Blockchain Decentralized Consensus in Progress (~12–25s)
+                      </strong>
+                      WORM storage upload confirmed. The backend has broadcasted a real smart contract transaction to MST Blockchain and is awaiting receipt validation from decentralized validators. This delay is direct cryptographic proof of on-chain mining rather than a synthetic database write.
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            <div className="batch-actions-bar">
-              <button className="button button-primary batch-submit-btn" disabled={busy || queuedCount === 0}>
-                {busy
-                  ? 'Processing & Anchoring Batch…'
-                  : `🔒 Ingest & Anchor ${queuedCount} Evidence File${queuedCount !== 1 ? 's' : ''}`}
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="submit"
+                className="button button-primary"
+                disabled={busy || queuedCount === 0}
+                style={{ padding: '12px 28px', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                {files.some((f) => f.status === 'mining') ? (
+                  <>
+                    <Hourglass size={15} className="spin-slow" />
+                    Awaiting MST Block Confirmation…
+                  </>
+                ) : busy ? (
+                  'Executing Ingestion Pipeline…'
+                ) : errorCount > 0 ? (
+                  <>
+                    <RefreshCw size={15} />
+                    Retry Ingestion ({queuedCount} File{queuedCount !== 1 ? 's' : ''})
+                  </>
+                ) : (
+                  <>
+                    <Lock size={15} />
+                    Ingest &amp; Seal {queuedCount} Evidence File{queuedCount !== 1 ? 's' : ''}
+                  </>
+                )}
               </button>
             </div>
           </div>

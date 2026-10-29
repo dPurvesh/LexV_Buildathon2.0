@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 type CaseInfo = {
   case_number: string;
@@ -49,7 +50,7 @@ export default function CasePortfolio({ onSelectCase }: { onSelectCase: (caseNum
             <button key={c.case_number} className="case-card" onClick={() => onSelectCase(c.case_number)}>
               <div className="case-card-header">
                 <code className="case-id">{c.case_number}</code>
-                {c.has_tampered && <span className="tamper-badge tamper-alert">⚠</span>}
+                {c.has_tampered && <span className="tamper-badge tamper-alert"><AlertTriangle size={11} style={{ display: 'inline', marginRight: 3 }} /> Tamper</span>}
               </div>
               <div className="case-card-body">
                 <div className="case-stat">

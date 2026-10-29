@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRole, ROLES, Role } from '../context/RoleContext';
+import { Lock, KeyRound, X, ArrowRight } from 'lucide-react';
 
 export default function RoleLockModal() {
   const {
@@ -73,12 +74,12 @@ export default function RoleLockModal() {
     <div className="role-modal-backdrop" onClick={handleClose}>
       <div className="role-modal-card" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close-btn" onClick={handleClose} title="Close">
-          ✕
+          <X size={16} />
         </button>
 
         <div className="role-modal-header">
           <div className="lock-icon-halo">
-            {isLockActive ? '🔒' : '🔐'}
+            {isLockActive ? <Lock size={26} color="var(--amber)" /> : <KeyRound size={26} color="var(--cyan)" />}
           </div>
           <h3>{isLockActive ? 'Access Restricted' : 'Switch Forensic Persona'}</h3>
           <p className="role-modal-desc">
@@ -102,7 +103,7 @@ export default function RoleLockModal() {
               <small>Your Active Role</small>
               <strong>{ROLES[currentRole].badge}</strong>
             </div>
-            <span className="arrow-sep">➔</span>
+            <span className="arrow-sep"><ArrowRight size={14} color="var(--cyan)" /></span>
             <div className="role-pill required" style={{ borderColor: targetRoleInfo.color }}>
               <small>Required Role</small>
               <strong style={{ color: targetRoleInfo.color }}>{targetRoleInfo.badge}</strong>
