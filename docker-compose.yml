@@ -28,6 +28,7 @@ services:
       "
   backend:
     build: ./backend
+    volumes: ["./backend/app:/app/app"]
     depends_on: [database, minio, createbuckets]
     environment:
       DATABASE_URL: postgresql://forensic_admin:secure_password@database:5432/evidence_db

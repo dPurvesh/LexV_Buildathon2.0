@@ -904,12 +904,30 @@ export default function VerificationDropzone() {
               <strong>{result.reason}</strong>
             </div>
             <div className="fact-item">
-              <small>Visual / DCT Similarity</small>
+              <small>
+                {result.match_type === 'audio_video'
+                  ? 'Spoken Dialogue Similarity'
+                  : result.match_type === 'pdf_text'
+                  ? 'Textual Clause Similarity'
+                  : 'Visual / DCT Similarity'}
+              </small>
               <strong style={{ color: 'var(--amber)' }}>{result.matched_evidence?.similarity_pct}%</strong>
             </div>
             <div className="fact-item">
-              <small>Hamming Divergence</small>
-              <code>{result.matched_evidence?.hamming_distance ?? 0}/64 bits</code>
+              <small>
+                {result.match_type === 'audio_video'
+                  ? 'Acoustic Modality'
+                  : result.match_type === 'pdf_text'
+                  ? 'Document Structure'
+                  : 'Hamming Divergence'}
+              </small>
+              <code>
+                {result.match_type === 'audio_video'
+                  ? 'Waveform Divergence'
+                  : result.match_type === 'pdf_text'
+                  ? 'Clause Modification'
+                  : `${result.matched_evidence?.hamming_distance ?? 0}/64 bits`}
+              </code>
             </div>
             <div className="fact-item">
               <small>Calculated Tamper Score</small>
