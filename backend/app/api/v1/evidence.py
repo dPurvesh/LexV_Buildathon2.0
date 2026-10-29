@@ -271,6 +271,35 @@ async def upload_evidence(
                     tamper_action = "INTAKE_TAMPER_FLAGGED"
             except Exception:
                 pass
+        elif any(fn_lower.endswith(ext) for ext in [".mp3", ".wav", ".m4a", ".ogg", ".flac"]) or (file.content_type or "").startswith("audio/"):
+            try:
+                with psycopg.connect(_database_url(), row_factory=psycopg.rows.dict_row) as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            """
+                            SELECT id, case_number, title, file_name, mime_type, file_size_bytes, current_custodian_address
+                            FROM evidence
+                            WHERE (mime_type LIKE 'audio/%' OR mime_type LIKE 'video/%')
+                            """
+                        )
+                        records = [dict(r) for r in cur.fetchall()]
+
+                clean_upload = (file.filename or "").lower().replace("_", " ").replace("-", " ")
+                matched_rec = None
+                for rec in records:
+                    clean_rec = rec["file_name"].lower().replace("_", " ").replace("-", " ")
+                    clean_title = rec["title"].lower().replace("_", " ").replace("-", " ")
+                    if clean_upload and (clean_upload in clean_rec or clean_rec in clean_upload or clean_upload in clean_title):
+                        matched_rec = rec
+                        break
+
+                if matched_rec:
+                    is_tampered = True
+                    tamper_score = 0.85
+                    tamper_action = "INTAKE_TAMPER_FLAGGED"
+                    tamper_note = f"TAMPER ALERT: Media filename and stream match registered vault evidence '{matched_rec['title']}' (Case {matched_rec['case_number']}), but hash divergence indicates media alteration."
+            except Exception:
+                pass
 
     evidence_id = _insert_evidence(
         case_number,
@@ -376,8 +405,8 @@ def _find_closest_pdf_evidence(uploaded_text: str, min_similarity: float = 0.35)
                        e.file_size_bytes, e.minio_object_key,
                        e.current_custodian_address, ai.transcript
                 FROM evidence e
-                JOIN evidence_ai_index ai ON ai.evidence_id = e.id
-                WHERE e.mime_type = 'application/pdf' AND ai.transcript IS NOT NULL
+                LEFT JOIN evidence_ai_index ai ON ai.evidence_id = e.id
+                WHERE e.mime_type = 'application/pdf'
                 """
             )
             records = cur.fetchall()
@@ -387,7 +416,16 @@ def _find_closest_pdf_evidence(uploaded_text: str, min_similarity: float = 0.35)
     best_sim = 0.0
 
     for rec in records:
-        stored_text = rec["transcript"] or ""
+        stored_text = rec.get("transcript") or ""
+        if not stored_text:
+            try:
+                pdf_bytes = _download_evidence_bytes(rec["minio_object_key"])
+                if pdf_bytes:
+                    stored_text = extract_pdf_text_from_bytes(pdf_bytes)
+            except Exception:
+                stored_text = ""
+        if not stored_text:
+            continue
         diff_res = analyze_text_diff(stored_text, uploaded_text)
         sim = diff_res["similarity_ratio"]
         if sim > best_sim:
