@@ -922,12 +922,14 @@ export default function VerificationDropzone() {
           {/* Visual Forensics */}
           {(result.original_b64 || result.uploaded_b64 || result.ela_heatmap_b64) && renderImageForensics(result)}
 
-          {/* PDF Document Forensics */}
-          {result.match_type === 'pdf_text' && result.text_diff && (
+          {/* Document & Audio Speech Differential Forensics */}
+          {(result.match_type === 'pdf_text' || result.match_type === 'audio_video') && result.text_diff && (
             <div className="pdf-diff-section">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <span style={{ font: '700 12px var(--font-mono)', color: 'var(--cyan)' }}>
-                  DOCUMENT TEXT EXTRACTION &amp; DIFFERENCE ANALYSIS
+                  {result.match_type === 'audio_video'
+                    ? '🎙️ SPOKEN SPEECH TRANSCRIPT & PHRASE DIFFERENTIAL ANALYSIS (faster-whisper)'
+                    : 'DOCUMENT TEXT EXTRACTION & DIFFERENCE ANALYSIS'}
                 </span>
                 <span className="badge-alert">
                   {result.text_diff.lines_added_count} additions &bull; {result.text_diff.lines_removed_count} deletions
@@ -936,7 +938,7 @@ export default function VerificationDropzone() {
               {result.text_diff.added_samples.length > 0 && (
                 <div style={{ marginBottom: '10px' }}>
                   <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Altered / Injected Content:
+                    {result.match_type === 'audio_video' ? 'Altered / Spliced Spoken Phrase:' : 'Altered / Injected Content:'}
                   </small>
                   {result.text_diff.added_samples.map((line, idx) => (
                     <div key={idx} className="pdf-diff-line pdf-diff-added">+ {line}</div>
@@ -946,7 +948,7 @@ export default function VerificationDropzone() {
               {result.text_diff.removed_samples.length > 0 && (
                 <div>
                   <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Missing Original Content:
+                    {result.match_type === 'audio_video' ? 'Original Spoken Words in Vault Record:' : 'Missing Original Content:'}
                   </small>
                   {result.text_diff.removed_samples.map((line, idx) => (
                     <div key={idx} className="pdf-diff-line pdf-diff-removed">- {line}</div>

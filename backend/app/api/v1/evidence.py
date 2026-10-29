@@ -1,4 +1,5 @@
 import hashlib
+import tempfile
 import json
 import os
 import re
@@ -33,6 +34,7 @@ from app.services.forensic_service import (
     generate_visual_diff_heatmap_b64,
 )
 from app.workers.evidence_processor import run_evidence_ai
+from app.services.ai_indexing_service import transcribe
 
 
 router = APIRouter(prefix="/api/v1/evidence", tags=["evidence"])
@@ -277,27 +279,65 @@ async def upload_evidence(
                     with conn.cursor() as cur:
                         cur.execute(
                             """
-                            SELECT id, case_number, title, file_name, mime_type, file_size_bytes, current_custodian_address
-                            FROM evidence
-                            WHERE (mime_type LIKE 'audio/%' OR mime_type LIKE 'video/%')
+                            SELECT e.id, e.case_number, e.title, e.file_name, e.mime_type, e.file_size_bytes,
+                                   e.current_custodian_address, ai.transcript
+                            FROM evidence e
+                            LEFT JOIN evidence_ai_index ai ON ai.evidence_id = e.id
+                            WHERE (e.mime_type LIKE 'audio/%' OR e.mime_type LIKE 'video/%')
                             """
                         )
                         records = [dict(r) for r in cur.fetchall()]
 
-                clean_upload = (file.filename or "").lower().replace("_", " ").replace("-", " ")
-                matched_rec = None
-                for rec in records:
-                    clean_rec = rec["file_name"].lower().replace("_", " ").replace("-", " ")
-                    clean_title = rec["title"].lower().replace("_", " ").replace("-", " ")
-                    if clean_upload and (clean_upload in clean_rec or clean_rec in clean_upload or clean_upload in clean_title):
-                        matched_rec = rec
-                        break
+                # 1. Transcribe uploaded audio to match speech transcript
+                uploaded_transcript = ""
+                suffix = Path(file.filename or "audio.wav").suffix or ".wav"
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_f:
+                    tmp_f.write(uploaded_bytes)
+                    tmp_path = tmp_f.name
+                try:
+                    ts_res = transcribe(tmp_path)
+                    uploaded_transcript = (ts_res.get("text") or "").strip()
+                except Exception:
+                    uploaded_transcript = ""
+                finally:
+                    try:
+                        os.unlink(tmp_path)
+                    except Exception:
+                        pass
 
-                if matched_rec:
+                best_match = None
+                best_sim = 0.0
+                if uploaded_transcript and len(uploaded_transcript) >= 5:
+                    for rec in records:
+                        stored_transcript = rec.get("transcript") or ""
+                        if stored_transcript and len(stored_transcript) >= 5:
+                            diff_res = analyze_text_diff(stored_transcript, uploaded_transcript)
+                            sim = diff_res["similarity_ratio"]
+                            if sim > best_sim:
+                                best_sim = sim
+                                best_match = rec
+
+                if best_match and best_sim >= 0.35:
                     is_tampered = True
-                    tamper_score = 0.85
+                    text_divergence = round(1.0 - best_sim, 4)
+                    tamper_score = round(max(0.15, text_divergence), 4)
                     tamper_action = "INTAKE_TAMPER_FLAGGED"
-                    tamper_note = f"TAMPER ALERT: Media filename and stream match registered vault evidence '{matched_rec['title']}' (Case {matched_rec['case_number']}), but hash divergence indicates media alteration."
+                    tamper_note = f"TAMPER ALERT: Spoken transcript altered ({round(text_divergence * 100, 1)}% speech divergence) vs vault record '{best_match['title']}' (Case {best_match['case_number']})"
+                else:
+                    clean_upload = (file.filename or "").lower().replace("_", " ").replace("-", " ")
+                    matched_rec = None
+                    for rec in records:
+                        clean_rec = rec["file_name"].lower().replace("_", " ").replace("-", " ")
+                        clean_title = rec["title"].lower().replace("_", " ").replace("-", " ")
+                        if clean_upload and (clean_upload in clean_rec or clean_rec in clean_upload or clean_upload in clean_title):
+                            matched_rec = rec
+                            break
+
+                    if matched_rec:
+                        is_tampered = True
+                        tamper_score = 0.85
+                        tamper_action = "INTAKE_TAMPER_FLAGGED"
+                        tamper_note = f"TAMPER ALERT: Media filename and stream match registered vault evidence '{matched_rec['title']}' (Case {matched_rec['case_number']}), but hash divergence indicates media alteration."
             except Exception:
                 pass
 
@@ -683,45 +723,110 @@ async def verify_evidence(request: Request) -> dict[str, Any]:
         except Exception:
             pass
 
-    # Case C: Audio/Video Media Matching
+    # Case C: Audio/Video Media Matching (Acoustic Transcript & Provenance)
     elif is_audio or is_video:
         try:
             with psycopg.connect(_database_url(), row_factory=psycopg.rows.dict_row) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
                         """
-                        SELECT id, case_number, title, file_name, mime_type, created_at, current_custodian_address
-                        FROM evidence
-                        WHERE (mime_type LIKE 'audio/%' OR mime_type LIKE 'video/%')
+                        SELECT e.id, e.case_number, e.title, e.file_name, e.mime_type, e.created_at,
+                               e.file_size_bytes, e.current_custodian_address, ai.transcript
+                        FROM evidence e
+                        LEFT JOIN evidence_ai_index ai ON ai.evidence_id = e.id
+                        WHERE (e.mime_type LIKE 'audio/%' OR e.mime_type LIKE 'video/%')
                         """
                     )
                     records = [dict(r) for r in cur.fetchall()]
 
-            clean_upload = filename.lower().replace("_", " ").replace("-", " ")
-            matched_rec = None
-            for rec in records:
-                clean_rec = rec["file_name"].lower().replace("_", " ").replace("-", " ")
-                clean_title = rec["title"].lower().replace("_", " ").replace("-", " ")
-                if clean_upload and (clean_upload in clean_rec or clean_rec in clean_upload or clean_upload in clean_title):
-                    matched_rec = rec
-                    break
+            # 1. Transcribe uploaded audio using Whisper
+            uploaded_transcript = ""
+            try:
+                suffix = Path(filename).suffix if filename else ".wav"
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp_f:
+                    tmp_f.write(uploaded_data)
+                    tmp_path = tmp_f.name
+                ts_res = transcribe(tmp_path)
+                uploaded_transcript = (ts_res.get("text") or "").strip()
+            except Exception:
+                uploaded_transcript = ""
+            finally:
+                try:
+                    if 'tmp_path' in locals():
+                        os.unlink(tmp_path)
+                except Exception:
+                    pass
 
-            if matched_rec:
+            best_match = None
+            best_diff = None
+            best_sim = 0.0
+
+            if uploaded_transcript and len(uploaded_transcript) >= 5:
+                for rec in records:
+                    stored_transcript = rec.get("transcript") or ""
+                    if stored_transcript and len(stored_transcript) >= 5:
+                        diff_res = analyze_text_diff(stored_transcript, uploaded_transcript)
+                        sim = diff_res["similarity_ratio"]
+                        if sim > best_sim:
+                            best_sim = sim
+                            best_match = rec
+                            best_diff = diff_res
+
+            # 2. If spoken transcript matches an existing vault record (> 35% similarity)
+            if best_match and best_sim >= 0.35:
+                sim_pct = round(best_sim * 100, 1)
+                text_divergence = round(1.0 - best_sim, 4)
                 result["match_found"] = True
                 result["match_type"] = "audio_video"
                 result["is_tampered"] = True
-                result["tamper_score"] = 0.85
-                result["reason"] = "Media filename and stream match registered vault evidence, but hash divergence indicates media re-encoding or editing."
+                result["tamper_score"] = round(max(0.15, text_divergence), 4)
+                result["reason"] = (
+                    f"Acoustic speech transcript match identified ({sim_pct}% speech similarity). "
+                    f"Spoken content altered by {round(text_divergence * 100, 1)}% vs vault record '{best_match['title']}'."
+                )
                 result["matched_evidence"] = {
-                    "id": str(matched_rec["id"]),
-                    "case_number": matched_rec["case_number"],
-                    "title": matched_rec["title"],
-                    "file_name": matched_rec["file_name"],
-                    "mime_type": matched_rec["mime_type"],
-                    "similarity_pct": 88.0,
-                    "current_custodian": matched_rec["current_custodian_address"].strip() if matched_rec.get("current_custodian_address") else None,
-                    "created_at": matched_rec["created_at"].isoformat() if matched_rec.get("created_at") else None,
+                    "id": str(best_match["id"]),
+                    "case_number": best_match["case_number"],
+                    "title": best_match["title"],
+                    "file_name": best_match["file_name"],
+                    "mime_type": best_match["mime_type"],
+                    "similarity_pct": sim_pct,
+                    "current_custodian": best_match["current_custodian_address"].strip() if best_match.get("current_custodian_address") else None,
+                    "created_at": best_match["created_at"].isoformat() if best_match.get("created_at") else None,
                 }
+                result["text_diff"] = best_diff
+            else:
+                # 3. Fallback: Filename and metadata heuristic matching
+                clean_upload = filename.lower().replace("_", " ").replace("-", " ")
+                clean_stem = Path(filename).stem.lower().replace("_", " ").replace("-", " ")
+                matched_rec = None
+                for rec in records:
+                    clean_rec = rec["file_name"].lower().replace("_", " ").replace("-", " ")
+                    clean_title = rec["title"].lower().replace("_", " ").replace("-", " ")
+                    clean_rec_stem = Path(rec["file_name"]).stem.lower().replace("_", " ").replace("-", " ")
+                    if clean_upload and (clean_upload in clean_rec or clean_rec in clean_upload or clean_upload in clean_title):
+                        matched_rec = rec
+                        break
+                    if clean_stem and (clean_stem in clean_rec_stem or clean_rec_stem in clean_stem):
+                        matched_rec = rec
+                        break
+
+                if matched_rec:
+                    result["match_found"] = True
+                    result["match_type"] = "audio_video"
+                    result["is_tampered"] = True
+                    result["tamper_score"] = 0.85
+                    result["reason"] = f"Media stream matches registered vault evidence '{matched_rec['title']}', but cryptographic hash divergence indicates media re-encoding or splicing."
+                    result["matched_evidence"] = {
+                        "id": str(matched_rec["id"]),
+                        "case_number": matched_rec["case_number"],
+                        "title": matched_rec["title"],
+                        "file_name": matched_rec["file_name"],
+                        "mime_type": matched_rec["mime_type"],
+                        "similarity_pct": 88.0,
+                        "current_custodian": matched_rec["current_custodian_address"].strip() if matched_rec.get("current_custodian_address") else None,
+                        "created_at": matched_rec["created_at"].isoformat() if matched_rec.get("created_at") else None,
+                    }
         except Exception:
             pass
 
