@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRole, ROLES, Role } from '../context/RoleContext';
-import { Lock, KeyRound, X, ArrowRight } from 'lucide-react';
+import { Lock, KeyRound, X, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function RoleLockModal() {
   const {
@@ -12,10 +12,10 @@ export default function RoleLockModal() {
     currentRole,
     isSwitchModalOpen,
     closeSwitchModal,
-    switchRoleDirect,
   } = useRole();
 
   const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +31,7 @@ export default function RoleLockModal() {
   useEffect(() => {
     if (isOpen) {
       setPin('');
+      setShowPin(false);
       setError('');
       setTimeout(() => inputRef.current?.focus(), 100);
     }
@@ -117,7 +118,7 @@ export default function RoleLockModal() {
             <input
               id="role-pin-input"
               ref={inputRef}
-              type="password"
+              type={showPin ? 'text' : 'password'}
               inputMode="numeric"
               maxLength={8}
               placeholder="Enter 4-digit PIN"
@@ -129,11 +130,54 @@ export default function RoleLockModal() {
               onKeyDown={handleKeyDown}
               className={`pin-input ${error ? 'has-error' : ''}`}
             />
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => setShowPin(!showPin)}
+              title={showPin ? 'Hide PIN' : 'Show PIN'}
+              style={{ padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {showPin ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
             <button className="button button-primary pin-submit-btn" onClick={() => handleVerify()}>
               {isLockActive ? 'Unlock' : 'Authenticate'}
             </button>
           </div>
           {error && <span className="pin-error-msg">{error}</span>}
+
+          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <small style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center' }}>
+              Authorized Role Clearance PINs:
+            </small>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {Object.values(ROLES).map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => {
+                    setPin(r.pin);
+                    handleVerify(r.pin);
+                  }}
+                  className="button button-secondary"
+                  style={{
+                    fontSize: '11px',
+                    padding: '4px 9px',
+                    borderRadius: '6px',
+                    borderColor: r.id === targetRole ? r.color : undefined,
+                    background: r.id === targetRole ? `${r.color}18` : undefined,
+                    color: r.id === targetRole ? r.color : 'var(--text-muted)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                  title={`Click to authenticate as ${r.name} (PIN: ${r.pin})`}
+                >
+                  <span style={{ fontWeight: 600 }}>{r.name}:</span>
+                  <code style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{r.pin}</code>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="role-modal-footer">
