@@ -18,9 +18,12 @@ type DashboardStats = {
   total_evidence: number;
   active_cases: number;
   total_storage_bytes: number;
+  vector_indexed?: number;
   pending_ai: number;
   tamper_alerts: number;
+  custody_transfers?: number;
   total_transfers: number;
+  total_custody_events?: number;
 };
 
 type Health = {
@@ -205,17 +208,19 @@ export default function Home() {
               <small className="kpi-label">Tamper Alerts</small>
             </div>
           </div>
-          <div className="kpi-card">
+          <div className="kpi-card" title={`${stats?.vector_indexed ?? 0} evidence records indexed with 512-dim CLIP vectors`}>
             <span className="kpi-icon"><Cpu size={18} color="var(--cyan)" /></span>
             <div className="kpi-content">
-              <strong className="kpi-value">{stats?.pending_ai ?? '0'}</strong>
-              <small className="kpi-label">Vector Indexed</small>
+              <strong className="kpi-value">{stats?.vector_indexed ?? stats?.total_evidence ?? '0'}</strong>
+              <small className="kpi-label">
+                Vector Indexed {stats?.pending_ai ? `(${stats.pending_ai} pending)` : ''}
+              </small>
             </div>
           </div>
-          <div className="kpi-card">
+          <div className="kpi-card" title={`${stats?.total_custody_events ?? stats?.total_transfers ?? 0} total chain of custody audit logs recorded`}>
             <span className="kpi-icon"><Link2 size={18} color="var(--cyan)" /></span>
             <div className="kpi-content">
-              <strong className="kpi-value">{stats?.total_transfers ?? '—'}</strong>
+              <strong className="kpi-value">{stats?.custody_transfers ?? stats?.total_transfers ?? '0'}</strong>
               <small className="kpi-label">Custody Handoffs</small>
             </div>
           </div>

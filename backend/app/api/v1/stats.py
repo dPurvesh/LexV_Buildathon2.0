@@ -28,7 +28,9 @@ def dashboard_stats() -> dict[str, Any]:
             row = cur.fetchone()
 
             cur.execute("""
-                SELECT COUNT(*)::int AS pending
+                SELECT
+                    (SELECT COUNT(DISTINCT evidence_id)::int FROM evidence_ai_index) AS vector_indexed,
+                    COUNT(*)::int AS pending
                 FROM evidence e
                 WHERE NOT EXISTS (
                     SELECT 1 FROM evidence_ai_index ai WHERE ai.evidence_id = e.id
@@ -36,16 +38,28 @@ def dashboard_stats() -> dict[str, Any]:
             """)
             ai_row = cur.fetchone()
 
-            cur.execute("SELECT COUNT(*)::int AS total FROM custody_history")
+            cur.execute("""
+                SELECT
+                    COUNT(*) FILTER (
+                        WHERE action_type = 'CUSTODY_TRANSFER'
+                           OR from_custodian != to_custodian
+                           OR action_type NOT IN ('INITIAL_INTAKE', 'INTAKE_TAMPER_FLAGGED')
+                    )::int AS transfers,
+                    COUNT(*)::int AS total_events
+                FROM custody_history
+            """)
             custody_row = cur.fetchone()
 
     return {
         "total_evidence": row["total_evidence"],
         "active_cases": row["active_cases"],
         "total_storage_bytes": int(row["total_storage_bytes"]),
+        "vector_indexed": ai_row["vector_indexed"] or 0,
         "pending_ai": ai_row["pending"],
         "tamper_alerts": row["tamper_alerts"],
-        "total_transfers": custody_row["total"],
+        "custody_transfers": custody_row["transfers"] or 0,
+        "total_transfers": custody_row["transfers"] or 0,
+        "total_custody_events": custody_row["total_events"] or 0,
     }
 
 
