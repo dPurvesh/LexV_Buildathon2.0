@@ -1,5 +1,5 @@
 {
-  "contract_address": "0x0000000000000000000000000000000000000001",
+  "contract_address": "0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e",
   "abi": [
     {
       "inputs": [],
@@ -201,6 +201,6 @@
       "type": "function"
     }
   ],
-  "mock": true,
-  "network": "mock"
+  "mock": false,
+  "network": "MST Mainnet"
 }

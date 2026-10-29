@@ -221,3 +221,4 @@ This software is built for evidentiary non-repudiation and complies with:
 * **Bharatiya Sakshya Adhiniyam (BSA 2023) § 63**
 * **SEC Rule 17a-4 (COMPLIANCE WORM Storage)**
 * **Information Technology Act 2000 § 79A**
+

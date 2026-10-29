@@ -236,9 +236,9 @@ def blockchain_status() -> dict[str, Any]:
         web3 = _web3()
         chain_id = web3.eth.chain_id
         network_name, explorer_url = get_mst_network_info(chain_id)
-        mock_mode = bool(config.get("mock", False)) or provider_url.lower().startswith(
+        mock_mode = provider_url.lower().startswith(
             ("mock://", "http://127.0.0.1", "http://localhost")
-        )
+        ) or (bool(config.get("mock", False)) and not os.getenv("CONTRACT_ADDRESS"))
         status: dict[str, Any] = {
             "connected": True,
             "configured": True,

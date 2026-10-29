@@ -18,7 +18,7 @@ type BlockchainHealth = {
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-const DEFAULT_CONTRACT = '0x16b0F1E2a23337C4e5695C601072d6F3859A7311';
+const DEFAULT_CONTRACT = '0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e';
 
 export default function TelemetryBar() {
   const [health, setHealth] = useState<BlockchainHealth | null>(null);
