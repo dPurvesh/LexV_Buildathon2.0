@@ -121,7 +121,7 @@ export default function RoleLockModal() {
               type={showPin ? 'text' : 'password'}
               inputMode="numeric"
               maxLength={8}
-              placeholder="Enter 4-digit PIN"
+              placeholder="Enter PIN (e.g. 1001)"
               value={pin}
               onChange={(e) => {
                 setPin(e.target.value);
