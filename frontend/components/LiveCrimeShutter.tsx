@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, MapPin, ShieldCheck, Zap, RefreshCw, AlertTriangle, ExternalLink, Lock, CheckCircle2, Crosshair, Radio } from 'lucide-react';
+import { Camera, MapPin, ShieldCheck, RefreshCw, ExternalLink, CheckCircle2, Crosshair, Radio, Smartphone, FolderGit2 } from 'lucide-react';
 import { txLink } from '../lib/explorer';
 
 type GpsState = {
@@ -48,7 +48,6 @@ export default function LiveCrimeShutter({
 
   const [busy, setBusy] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [anchorResult, setAnchorResult] = useState<{
     id: string;
     txHash: string;
@@ -56,7 +55,7 @@ export default function LiveCrimeShutter({
     sha256: string;
     lat: number;
     lon: number;
-    osmUrl: string;
+    mapsUrl: string;
   } | null>(null);
 
   // Acquire Geolocation
@@ -74,7 +73,7 @@ export default function LiveCrimeShutter({
           setGpsStatus('locked');
         },
         () => {
-          // Fallback to Pune Central Reserve Vault Crime Scene
+          // Fallback to crime scene coordinates
           setGpsCoords({ lat: 18.520417, lon: 73.856722, accuracy: 4, altitude: 560 });
           setGpsStatus('simulated');
         },
@@ -109,7 +108,7 @@ export default function LiveCrimeShutter({
     } catch (err) {
       setCameraActive(false);
       setCameraError(
-        'Direct WebRTC camera stream blocked or unavailable. You can use the Native Device Camera Shutter below.'
+        'Direct browser camera stream blocked or unavailable. You can launch Device Camera Shutter below.'
       );
     }
   };
@@ -175,9 +174,6 @@ export default function LiveCrimeShutter({
     ctx.font = 'bold 13px sans-serif';
     ctx.fillText(`[ORIGIN VERIFIED]`, width - 160, height - 20);
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    setCapturedPhoto(dataUrl);
-
     // 3. Convert to Blob & compute client-side WebCrypto SHA-256
     setStatusMessage('Computing client-side WebCrypto SHA-256 digest…');
     canvas.toBlob(async (blob) => {
@@ -212,7 +208,7 @@ export default function LiveCrimeShutter({
         }
 
         const data = await res.json();
-        const osmLink = `https://www.openstreetmap.org/?mlat=${gpsCoords.lat}&mlon=${gpsCoords.lon}#map=17/${gpsCoords.lat}/${gpsCoords.lon}`;
+        const googleMapsLink = `https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lon}`;
 
         setAnchorResult({
           id: data.id,
@@ -221,7 +217,7 @@ export default function LiveCrimeShutter({
           sha256: clientHash,
           lat: gpsCoords.lat,
           lon: gpsCoords.lon,
-          osmUrl: osmLink,
+          mapsUrl: googleMapsLink,
         });
 
         if (onAnchored) onAnchored(data.id);
@@ -239,7 +235,7 @@ export default function LiveCrimeShutter({
     if (!file) return;
 
     setBusy(true);
-    setStatusMessage('Processing native camera photo & hashing…');
+    setStatusMessage('Processing camera photo & calculating SHA-256…');
 
     try {
       const clientHash = await computeSha256(file);
@@ -265,7 +261,7 @@ export default function LiveCrimeShutter({
       }
 
       const data = await res.json();
-      const osmLink = `https://www.openstreetmap.org/?mlat=${gpsCoords.lat}&mlon=${gpsCoords.lon}#map=17/${gpsCoords.lat}/${gpsCoords.lon}`;
+      const googleMapsLink = `https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lon}`;
 
       setAnchorResult({
         id: data.id,
@@ -274,7 +270,7 @@ export default function LiveCrimeShutter({
         sha256: clientHash,
         lat: gpsCoords.lat,
         lon: gpsCoords.lon,
-        osmUrl: osmLink,
+        mapsUrl: googleMapsLink,
       });
 
       if (onAnchored) onAnchored(data.id);
@@ -285,47 +281,69 @@ export default function LiveCrimeShutter({
     }
   };
 
-  const osmUrl = `https://www.openstreetmap.org/?mlat=${gpsCoords.lat}&mlon=${gpsCoords.lon}#map=17/${gpsCoords.lat}/${gpsCoords.lon}`;
+  const googleMapsUrl = `https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lon}`;
 
   return (
     <div className="live-shutter-panel">
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Top Header Banner */}
+      {/* Top Header Banner matching our actual UI */}
       <div className="shutter-header">
         <div>
-          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--emerald)' }}>
-            <Radio size={13} className="spin" /> ON-SCENE FORENSIC SHUTTER
+          <span className="eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Radio size={12} className="spin" /> ON-SCENE FORENSIC SHUTTER
           </span>
-          <h2 style={{ fontSize: '18px', margin: '4px 0' }}>Capture &amp; Anchor Directly on Crime Spot</h2>
-          <small style={{ color: 'var(--text-muted)' }}>
-            Instantaneous hardware capture with zero seizure gap • Live GPS coordinate stamping
+          <h2 style={{ fontSize: '20px', margin: '6px 0 2px 0', color: 'var(--text-heading)' }}>
+            Capture &amp; Anchor Directly on Crime Spot
+          </h2>
+          <small style={{ color: 'var(--text-muted)', fontSize: '12.5px' }}>
+            Instantaneous optical hardware capture with zero seizure gap • Live GPS coordinate stamping
           </small>
         </div>
 
         {/* Live GPS Lock Indicator */}
-        <div className="gps-lock-chip">
-          <MapPin size={15} color={gpsStatus === 'locked' ? 'var(--emerald)' : 'var(--cyan)'} />
+        <div
+          className="gps-lock-chip"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: 'var(--green-badge-bg)',
+            border: '1px solid var(--green-badge-border)',
+            borderRadius: 'var(--radius-md)',
+            padding: '8px 14px',
+          }}
+        >
+          <div
+            className="live-beacon-dot"
+            style={{
+              width: '8px',
+              height: '8px',
+              background: 'var(--accent-green)',
+              borderRadius: '50%',
+              boxShadow: 'var(--status-dot-glow)',
+            }}
+          />
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <strong>{gpsStatus === 'locked' ? 'GPS SATELLITE LOCKED' : 'CRIME SPOT GPS LOCKED'}</strong>
-              <span className="live-beacon-dot" style={{ width: '7px', height: '7px' }} />
+            <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--green-badge-text)', textTransform: 'uppercase' }}>
+              {gpsStatus === 'locked' ? 'GPS SATELLITE FIX LOCKED' : 'CRIME SPOT GPS LOCKED'}
             </div>
             <a
-              href={osmUrl}
+              href={googleMapsUrl}
               target="_blank"
-              rel="noreferrer"
-              title="Click to view crime scene location externally on OpenStreetMap / Leaflet"
-              style={{ fontSize: '11px', color: 'var(--cyan)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+              rel="noopener noreferrer"
+              title="Verify crime scene coordinates on Google Maps Satellite"
+              style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
             >
-              {gpsCoords.lat.toFixed(5)}° N, {gpsCoords.lon.toFixed(5)}° E (Verify on OpenStreetMap ↗)
+              <span>{gpsCoords.lat.toFixed(6)}° N, {gpsCoords.lon.toFixed(6)}° E (Google Maps ↗)</span>
+              <ExternalLink size={10} />
             </a>
           </div>
           <button
             type="button"
             className="button button-ghost"
-            style={{ padding: '4px', marginLeft: '6px' }}
+            style={{ padding: '4px 6px', marginLeft: '4px' }}
             onClick={acquireGps}
             title="Refresh GPS Satellite Fix"
           >
@@ -334,84 +352,196 @@ export default function LiveCrimeShutter({
         </div>
       </div>
 
-      {/* Case & Intake Metadata Inputs */}
-      <div className="shutter-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', margin: '16px 0' }}>
-        <label>
-          Case Number
-          <input value={caseNumber} onChange={(e) => setCaseNumber(e.target.value)} required />
-        </label>
-        <label>
-          Evidence Title
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-        </label>
-        <label>
-          Seizing Officer (Custodian)
-          <input value={custodian} onChange={(e) => setCustodian(e.target.value)} required />
-        </label>
+      {/* Case & Intake Metadata Cards matching BatchUpload UI */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px', margin: '18px 0' }}>
+        {/* Card 1: Case Docket Number */}
+        <div className="inspector-card">
+          <div className="inspector-card-header">
+            <span className="inspector-card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <FolderGit2 size={15} color="var(--primary)" /> Case Docket Number
+            </span>
+          </div>
+          <input
+            className="search-input"
+            style={{ width: '100%', padding: '10px 14px' }}
+            value={caseNumber}
+            onChange={(e) => setCaseNumber(e.target.value)}
+            placeholder="e.g. CASE-2026-CR902"
+            required
+          />
+          <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+            Docket or statutory case identifier
+          </small>
+        </div>
+
+        {/* Card 2: Evidence Title */}
+        <div className="inspector-card">
+          <div className="inspector-card-header">
+            <span className="inspector-card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Camera size={15} color="var(--primary)" /> Evidence Title / Description
+            </span>
+          </div>
+          <input
+            className="search-input"
+            style={{ width: '100%', padding: '10px 14px' }}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Crime Scene Weapon / Seizure Photo"
+            required
+          />
+          <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+            Forensic asset identification tag
+          </small>
+        </div>
+
+        {/* Card 3: Seizing Officer / Custodian */}
+        <div className="inspector-card">
+          <div className="inspector-card-header">
+            <span className="inspector-card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <ShieldCheck size={15} color="var(--primary)" /> Seizing Custodian (Officer)
+            </span>
+          </div>
+          <input
+            className="search-input"
+            style={{ width: '100%', padding: '10px 14px' }}
+            value={custodian}
+            onChange={(e) => setCustodian(e.target.value)}
+            placeholder="e.g. POLICE-DL-9821 or 0x..."
+            required
+          />
+          <small style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px', display: 'block' }}>
+            Verified officer badge or custodian ID
+          </small>
+        </div>
       </div>
 
-      {/* Camera Viewfinder Box */}
-      <div className="shutter-viewfinder-frame">
-        {cameraActive ? (
-          <div className="viewfinder-relative">
-            <video ref={videoRef} autoPlay playsInline muted className="viewfinder-video" />
-
-            {/* Tactical Forensic HUD Overlay */}
-            <div className="hud-rec-tag">
-              <span className="rec-dot"></span> REC ● 1080P FIELD SENSOR
-            </div>
-
-            <div className="hud-crosshairs">
-              <Crosshair size={42} color="rgba(56, 189, 248, 0.45)" />
-            </div>
-
-            <div className="hud-bottom-bar">
-              <span>{caseNumber}</span>
-              <span>📍 {gpsCoords.lat.toFixed(6)}, {gpsCoords.lon.toFixed(6)}</span>
-              <span>UTC FIELD SHUTTER</span>
-            </div>
+      {/* Camera Viewfinder Terminal Box */}
+      <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--terminal-bg)', boxShadow: 'var(--shadow-md)' }}>
+        {/* Terminal Header Bar */}
+        <div
+          style={{
+            background: 'var(--terminal-header)',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid var(--terminal-border)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }} />
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }} />
+            <span style={{ marginLeft: '8px', fontSize: '11.5px', fontFamily: 'var(--font-mono)', color: 'var(--terminal-text)', fontWeight: 600 }}>
+              OPTICAL SENSOR FEED • 1080P FIELD HUD • SATELLITE TIMESTAMP SYNC
+            </span>
           </div>
-        ) : (
-          <div className="viewfinder-fallback">
-            <Camera size={44} color="var(--cyan)" style={{ marginBottom: '12px', opacity: 0.7 }} />
-            <strong style={{ display: 'block', color: 'var(--text-heading)' }}>Forensic Camera Sensor Ready</strong>
-            <p style={{ maxWidth: '420px', margin: '8px auto', fontSize: '12px', color: 'var(--text-muted)' }}>
-              {cameraError || 'Activate the live optical camera sensor to capture and anchor evidence on the spot.'}
-            </p>
-            <button type="button" className="button button-primary" onClick={startCamera} style={{ marginTop: '8px' }}>
-              <Camera size={14} style={{ marginRight: 6 }} /> Start Optical Viewfinder
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                fontSize: '10.5px',
+                fontFamily: 'var(--font-mono)',
+                color: cameraActive ? '#4ade80' : 'var(--text-muted)',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              {cameraActive ? '● SENSOR ACTIVE' : '○ SENSOR STANDBY'}
+            </span>
           </div>
-        )}
+        </div>
+
+        {/* Viewfinder Video Area */}
+        <div className="shutter-viewfinder-frame">
+          {cameraActive ? (
+            <div className="viewfinder-relative">
+              <video ref={videoRef} autoPlay playsInline muted className="viewfinder-video" />
+
+              {/* Tactical Forensic HUD Overlay */}
+              <div className="hud-rec-tag">
+                <span className="rec-dot"></span> REC ● 1080P FIELD SENSOR
+              </div>
+
+              <div className="hud-crosshairs">
+                <Crosshair size={44} color="rgba(56, 189, 248, 0.45)" />
+              </div>
+
+              <div className="hud-bottom-bar">
+                <span>CASE: {caseNumber}</span>
+                <span>📍 {gpsCoords.lat.toFixed(6)}° N, {gpsCoords.lon.toFixed(6)}° E</span>
+                <span>UTC FIELD SHUTTER</span>
+              </div>
+            </div>
+          ) : (
+            <div className="viewfinder-fallback" style={{ background: 'var(--bg-card)', padding: '50px 24px', width: '100%', height: '100%' }}>
+              <div style={{ maxWidth: '440px', margin: '0 auto', textAlign: 'center' }}>
+                <Camera size={44} color="var(--primary)" style={{ marginBottom: '14px', opacity: 0.85 }} />
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-heading)', margin: '0 0 6px 0' }}>
+                  Forensic Camera Sensor Ready
+                </h3>
+                <p style={{ margin: '0 0 16px 0', fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  {cameraError || 'Launch optical sensor to capture and timestamp on-site evidence directly from camera optics.'}
+                </p>
+                <div style={{ display: 'inline-flex', gap: '10px' }}>
+                  <button type="button" className="button button-primary" onClick={startCamera}>
+                    <Camera size={14} style={{ marginRight: 6 }} /> Start Optical Viewfinder
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Action Station */}
-      <div className="shutter-actions-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px', flexWrap: 'wrap', marginTop: '16px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      {/* Action Station matching actual UI */}
+      <div
+        className="shutter-actions-bar"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px',
+          flexWrap: 'wrap',
+          marginTop: '18px',
+          paddingTop: '16px',
+          borderTop: '1px solid var(--border)',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           {cameraActive && (
             <button
               type="button"
-              className="button button-primary shutter-snap-btn"
+              className="button button-primary"
               onClick={handleSnapAndAnchor}
               disabled={busy}
               style={{
-                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
-                padding: '10px 24px',
-                fontSize: '14px',
+                padding: '11px 24px',
+                fontSize: '13.5px',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 0 15px rgba(2, 132, 199, 0.4)',
               }}
             >
-              <Zap size={16} /> {busy ? 'Mining on MST Chain…' : '📸 CAPTURE & ANCHOR ON SPOT'}
+              <Camera size={16} /> {busy ? 'Anchoring & Mining on MST Chain…' : 'Capture & Anchor On-Spot'}
             </button>
           )}
 
           {/* Native Smartphone Shutter Input Trigger */}
-          <label className="button button-secondary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Camera size={14} /> 📱 Mobile Shutter
+          <label
+            className="button button-secondary"
+            style={{
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '11px 20px',
+              fontSize: '13.5px',
+            }}
+          >
+            <Smartphone size={16} /> Device / Mobile Shutter
             <input
               type="file"
               accept="image/*"
@@ -421,23 +551,56 @@ export default function LiveCrimeShutter({
               disabled={busy}
             />
           </label>
+
+          {/* Direct Google Maps Pin Quick Link */}
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button button-ghost"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', color: 'var(--text-heading)' }}
+            title="Verify crime spot coordinates on Google Maps"
+          >
+            <MapPin size={14} color="var(--primary)" />
+            <span>View Crime Scene Pin ↗</span>
+          </a>
         </div>
 
         {busy && (
-          <div className="shutter-busy-status" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--cyan)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+          <div
+            className="shutter-busy-status"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: 'var(--primary)',
+              fontSize: '12px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 600,
+            }}
+          >
             <RefreshCw size={13} className="spin" />
             <span>{statusMessage}</span>
           </div>
         )}
       </div>
 
-      {/* Verified On-Spot Anchored Receipt Banner */}
+      {/* Verified On-Spot Anchored Receipt Banner matching our UI */}
       {anchorResult && (
-        <div className="on-spot-success-card" style={{ marginTop: '20px', padding: '16px 20px', background: 'rgba(16, 185, 129, 0.08)', border: '1.5px solid rgba(16, 185, 129, 0.35)', borderRadius: 'var(--radius-lg)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+        <div
+          className="on-spot-success-card"
+          style={{
+            marginTop: '20px',
+            padding: '18px 22px',
+            background: 'var(--green-badge-bg)',
+            border: '1.5px solid var(--green-badge-border)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckCircle2 size={18} color="#10b981" />
-              <strong style={{ color: '#34d399', fontSize: '14px', letterSpacing: '0.02em' }}>
+              <CheckCircle2 size={18} color="var(--green-badge-text)" />
+              <strong style={{ color: 'var(--green-badge-text)', fontSize: '14px', letterSpacing: '0.02em' }}>
                 ON-SPOT CRIME SCENE EVIDENCE ANCHORED &amp; WORM SEALED
               </strong>
             </div>
@@ -446,39 +609,40 @@ export default function LiveCrimeShutter({
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', fontSize: '11.5px', fontFamily: 'var(--font-mono)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
             <div>
-              <small style={{ color: 'var(--text-muted)', display: 'block' }}>Crime Scene Geolocation</small>
+              <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Crime Scene Geolocation</small>
               <a
-                href={anchorResult.osmUrl}
+                href={anchorResult.mapsUrl}
                 target="_blank"
-                rel="noreferrer"
-                style={{ color: 'var(--cyan)', fontWeight: 600, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                rel="noopener noreferrer"
+                style={{ color: 'var(--primary)', fontWeight: 700, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
               >
-                {anchorResult.lat.toFixed(6)}° N, {anchorResult.lon.toFixed(6)}° E (OpenStreetMap ↗)
+                <span>{anchorResult.lat.toFixed(6)}° N, {anchorResult.lon.toFixed(6)}° E (Google Maps ↗)</span>
+                <ExternalLink size={11} />
               </a>
             </div>
 
             <div>
-              <small style={{ color: 'var(--text-muted)', display: 'block' }}>MST Mainnet Transaction</small>
+              <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>MST Mainnet Settlement</small>
               <a
                 href={txLink(anchorResult.txHash)}
                 target="_blank"
-                rel="noreferrer"
-                style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                rel="noopener noreferrer"
+                style={{ color: 'var(--primary)', textDecoration: 'underline', fontWeight: 600 }}
               >
                 {anchorResult.txHash.slice(0, 14)}… ↗ (MSTScan)
               </a>
             </div>
 
             <div>
-              <small style={{ color: 'var(--text-muted)', display: 'block' }}>Client-Side SHA-256 Digest</small>
-              <code style={{ fontSize: '10.5px' }}>{anchorResult.sha256.slice(0, 18)}…</code>
+              <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Client-Side SHA-256 Digest</small>
+              <code style={{ fontSize: '11px', color: 'var(--text-heading)' }}>{anchorResult.sha256.slice(0, 20)}…</code>
             </div>
 
             <div>
-              <small style={{ color: 'var(--text-muted)', display: 'block' }}>WORM Storage Compliance</small>
-              <strong style={{ color: '#f8fafc' }}>SEC Rule 17a-4 (365 Days Locked)</strong>
+              <small style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>WORM Storage Compliance</small>
+              <strong style={{ color: 'var(--text-heading)' }}>SEC Rule 17a-4 (365D Locked)</strong>
             </div>
           </div>
         </div>

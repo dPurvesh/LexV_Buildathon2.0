@@ -1,1 +1,2 @@
 ALTER TABLE evidence ADD COLUMN IF NOT EXISTS is_on_spot_capture BOOLEAN DEFAULT FALSE;
+

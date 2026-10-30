@@ -24,6 +24,7 @@ type EvidenceItem = {
       latitude?: number;
       longitude?: number;
       osm_url?: string;
+      maps_url?: string;
     };
     is_on_spot_capture?: boolean;
   } | null;
@@ -269,23 +270,27 @@ export default function EvidenceTable({
                       {item.title}
                       {(item.is_on_spot_capture || item.exif_data?.is_on_spot_capture || item.title.includes('[ON-SPOT]')) && (
                         <a
-                          href={item.exif_data?.gps?.osm_url || (item.exif_data?.gps?.latitude ? `https://www.openstreetmap.org/?mlat=${item.exif_data.gps.latitude}&mlon=${item.exif_data.gps.longitude}#map=17/${item.exif_data.gps.latitude}/${item.exif_data.gps.longitude}` : 'https://www.openstreetmap.org/?mlat=18.520417&mlon=73.856722#map=17/18.520417/73.856722')}
+                          href={
+                            item.exif_data?.gps?.latitude && item.exif_data?.gps?.longitude
+                              ? `https://www.google.com/maps?q=${item.exif_data.gps.latitude},${item.exif_data.gps.longitude}`
+                              : item.exif_data?.gps?.maps_url || 'https://www.google.com/maps?q=18.520417,73.856722'
+                          }
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          title="Captured directly on crime spot • Click to verify on external OpenStreetMap / Leaflet ↗"
+                          title="Captured directly on crime spot • Click to view pinpoint on Google Maps ↗"
                           style={{
                             marginLeft: '8px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
                             fontSize: '10px',
-                            padding: '2px 7px',
-                            borderRadius: '4px',
-                            background: 'rgba(16, 185, 129, 0.12)',
-                            border: '1px solid rgba(16, 185, 129, 0.35)',
-                            color: '#34d399',
-                            fontWeight: 600,
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
+                            background: 'var(--green-badge-bg)',
+                            border: '1px solid var(--green-badge-border)',
+                            color: 'var(--green-badge-text)',
+                            fontWeight: 700,
                             textDecoration: 'none',
                           }}
                         >

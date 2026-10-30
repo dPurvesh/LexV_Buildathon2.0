@@ -155,25 +155,37 @@ export default function ExifForensicsCard({
 
         {/* GPS Geolocation & Crime Scene Coordinates */}
         {hasGps && lat && lon && (
-          <div className="detail-row" style={{ gridColumn: '1 / -1', background: 'rgba(56, 189, 248, 0.05)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-            <span className="detail-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--cyan)' }}>
-              <MapPin size={13} /> Crime Scene GPS
+          <div className="detail-row" style={{ gridColumn: '1 / -1', background: 'var(--green-badge-bg)', padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--green-badge-border)' }}>
+            <span className="detail-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--green-badge-text)', fontWeight: 700 }}>
+              <MapPin size={14} /> Crime Scene GPS Coordinates
             </span>
-            <span className="detail-value" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-              <code style={{ fontSize: '11px', color: '#e0f2fe' }}>
-                LAT: {Number(lat).toFixed(6)} • LON: {Number(lon).toFixed(6)}
-                {alt ? ` (${alt}m)` : ''}
+            <span className="detail-value" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+              <code style={{ fontSize: '11px', color: 'var(--text-heading)', fontWeight: 600 }}>
+                {Number(lat).toFixed(6)}° N, {Number(lon).toFixed(6)}° E
+                {alt ? ` (Alt: ${alt}m)` : ''}
               </code>
-              <a
-                href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
-                target="_blank"
-                rel="noreferrer"
-                className="button button-secondary"
-                style={{ fontSize: '10.5px', padding: '3px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--cyan)' }}
-                title="Verify crime scene coordinates externally on OpenStreetMap / Leaflet in new tab"
-              >
-                OpenStreetMap / Leaflet <ExternalLink size={10} />
-              </a>
+              <div style={{ display: 'inline-flex', gap: '6px' }}>
+                <a
+                  href={`https://www.google.com/maps?q=${lat},${lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-primary"
+                  style={{ fontSize: '11px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  title="Open exact crime scene pin on Google Maps Satellite"
+                >
+                  <MapPin size={11} /> Google Maps Pin <ExternalLink size={10} />
+                </a>
+                <a
+                  href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="button button-secondary"
+                  style={{ fontSize: '11px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  title="Open on OpenStreetMap"
+                >
+                  OpenStreetMap <ExternalLink size={10} />
+                </a>
+              </div>
             </span>
           </div>
         )}

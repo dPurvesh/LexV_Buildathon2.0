@@ -353,6 +353,7 @@ async def upload_evidence(
     if is_on_spot_capture:
         lat_val = geo_lat if geo_lat is not None else 18.520417
         lon_val = geo_lon if geo_lon is not None else 73.856722
+        maps_link = f"https://www.google.com/maps?q={lat_val},{lon_val}"
         osm_link = f"https://www.openstreetmap.org/?mlat={lat_val}&mlon={lon_val}#map=17/{lat_val}/{lon_val}"
         initial_exif = {
             "has_exif": True,
@@ -370,7 +371,7 @@ async def upload_evidence(
                 "longitude": lon_val,
                 "altitude": 560.2,
                 "location_name": "Seized Directly on Crime Scene",
-                "maps_url": osm_link,
+                "maps_url": maps_link,
                 "osm_url": osm_link,
             },
             "timestamps": {
