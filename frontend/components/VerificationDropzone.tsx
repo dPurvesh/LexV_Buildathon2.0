@@ -67,7 +67,7 @@ type VerificationResponse = {
   custody_history?: Array<{ to_custodian: string; timestamp: string; eth_tx_hash?: string }>;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://lexvault-backend.onrender.com' : 'http://localhost:8000');
 
 async function sha256(file: File) {
   const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());

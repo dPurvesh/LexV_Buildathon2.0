@@ -18,7 +18,7 @@ type BlockchainHealth = {
   error?: string;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://lexvault-backend.onrender.com' : 'http://localhost:8000');
 const DEFAULT_CONTRACT = '0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e';
 
 export default function TelemetryBar() {

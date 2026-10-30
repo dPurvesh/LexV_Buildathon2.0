@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://lexvault-backend.onrender.com' : 'http://localhost:8000');
 
 type Word = { word: string; start: number; end: number };
 type TranscriptData = { text: string; words: Word[]; mime_type: string };

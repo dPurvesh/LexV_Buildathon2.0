@@ -3,7 +3,7 @@
 import { FormEvent, useRef, useState } from 'react';
 
 type UploadResult = { minio_object_key: string; eth_tx_hash: string; block_number: number; mock_chain?: boolean };
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 'https://lexvault-backend.onrender.com' : 'http://localhost:8000');
 import { txLink } from '../lib/explorer';
 
 async function sha256(file: File) {
