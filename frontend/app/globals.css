@@ -3348,3 +3348,331 @@ footer {
     text-align: center;
   }
 }
+
+
+/* ─────────────────────────────────────────────────────────────
+   CRIME SCENE GEOLOCATION RADAR & EXIF FORENSICS
+   ───────────────────────────────────────────────────────────── */
+
+.crime-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.crime-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.crime-map-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.crime-map-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crime-map-title strong {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  letter-spacing: 0.05em;
+  color: var(--text-heading);
+}
+
+.crime-map-title small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.crime-map-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.case-filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  border-color: var(--cyan);
+  color: var(--text-heading);
+}
+
+.filter-pill.active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  font-weight: 600;
+}
+
+.crime-map-refresh {
+  padding: 6px 10px;
+}
+
+.crime-map-frame {
+  position: relative;
+  width: 100%;
+  height: 480px;
+}
+
+.crime-map-leaflet-box {
+  width: 100%;
+  height: 100%;
+  background: #090d16;
+}
+
+/* Tactical dark mode styling for Leaflet OSM tiles */
+.crime-map-leaflet-box .leaflet-tile {
+  filter: brightness(0.68) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35);
+}
+
+.crime-map-legend {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  box-shadow: var(--shadow-md);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-body);
+}
+
+.legend-item.count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--cyan);
+  border-left: 1px solid var(--border);
+  padding-left: 14px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.green {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.legend-dot.red {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+@keyframes markerPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* Leaflet Popup Styling */
+.lexvault-map-popup .leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  color: #f8fafc !important;
+}
+
+.lexvault-map-popup .leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+
+.crime-point-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid var(--border);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.point-main-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.point-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.point-status-dot.dot-green {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.point-status-dot.dot-red {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.point-main-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-heading);
+}
+
+.point-main-info small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.point-coords {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--cyan);
+}
+
+.point-coords code {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.point-software-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.point-software-chip.chip-red {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.point-software-chip.chip-blue {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: var(--cyan);
+}
+
+.case-card-focused {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* EXIF Forensic Details Card */
+.card-tamper-border {
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.12) !important;
+}
+
+.exif-tamper-alert-box {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.alert-box-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tamper-indicator-list {
+  margin: 6px 0 0 0;
+  padding-left: 18px;
+  font-size: 11px;
+  color: #fca5a5;
+}
+
+.tamper-indicator-list li {
+  margin-bottom: 3px;
+}
+
+.software-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.software-tampered {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.software-clean {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}

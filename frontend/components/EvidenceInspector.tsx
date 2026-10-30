@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import ELAViewer from './ELAViewer';
 import TranscriptPlayer from './TranscriptPlayer';
 import CustodyTransferModal from './CustodyTransferModal';
+import ExifForensicsCard from './ExifForensicsCard';
 import { useRole } from '../context/RoleContext';
 import { txLink } from '../lib/explorer';
 import { Shield, X, FileText, Check, Link2, Search, AlertTriangle, Copy, Camera, Zap, Lock, Microscope, Mic, ScrollText, Share2 } from 'lucide-react';
@@ -351,35 +352,8 @@ export default function EvidenceInspector({
                   </div>
                 </div>
 
-                {/* EXIF Metadata Card (Conditional) */}
-                {evidence.exif_data && typeof evidence.exif_data === 'object' && Object.keys(evidence.exif_data).length > 0 && (
-                  <div className="inspector-card">
-                    <div className="inspector-card-header">
-                      <div className="inspector-card-title">
-                        <span className="inspector-card-icon"><Camera size={15} color="var(--cyan)" /></span>
-                        <span>EXIF Forensic Metadata</span>
-                      </div>
-                    </div>
-                    <div className="detail-grid">
-                      {Object.entries(evidence.exif_data).map(([key, val]) => {
-                        if (key === 'GPS' && typeof val === 'object' && val !== null) {
-                          return Object.entries(val as Record<string, string>).map(([gk, gv]) => (
-                            <div className="detail-row" key={`gps-${gk}`}>
-                              <span className="detail-label">GPS {gk}</span>
-                              <span className="detail-value">{String(gv)}</span>
-                            </div>
-                          ));
-                        }
-                        return (
-                          <div className="detail-row" key={key}>
-                            <span className="detail-label">{key}</span>
-                            <span className="detail-value">{String(val)}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                {/* EXIF Forensic Intelligence & Geolocation Card */}
+                {evidence.exif_data && <ExifForensicsCard exifData={evidence.exif_data} />}
 
                 {/* Forensic Action Station */}
                 <div className="inspector-card">

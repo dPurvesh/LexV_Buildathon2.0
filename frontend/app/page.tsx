@@ -282,6 +282,7 @@ export default function Home() {
               setCaseFilter(cn);
               setTab('repository');
             }}
+            onInspectEvidence={(id) => handleInspect(id)}
           />
         )}
 

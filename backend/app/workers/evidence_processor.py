@@ -12,6 +12,7 @@ from PIL.ExifTags import TAGS, GPSTAGS
 
 from app.services.ai_indexing_service import embed_image, embed_image_frames, embed_text, extract_video_frames, transcribe
 from app.services.forensic_service import analyze_image
+from app.services.exif_service import extract_exif_metadata
 
 
 BUCKET_NAME = "evidence-vault"
@@ -31,34 +32,10 @@ def _vector_literal(vector: list[float]) -> str:
 
 
 def _extract_exif(path: str) -> dict[str, Any]:
-    """Extract EXIF metadata from an image file."""
+    """Extract EXIF metadata from an image file using exif_service."""
     try:
-        with PILImage.open(path) as img:
-            exif_data = img.getexif()
-            if not exif_data:
-                return {}
-            result: dict[str, Any] = {}
-            for tag_id, value in exif_data.items():
-                tag = TAGS.get(tag_id, str(tag_id))
-                # Skip binary/bytes values and overly long values
-                if isinstance(value, bytes):
-                    continue
-                str_val = str(value)
-                if len(str_val) > 200:
-                    continue
-                result[tag] = str_val
-
-            # Check for GPS data
-            gps_ifd = exif_data.get_ifd(0x8825)
-            if gps_ifd:
-                gps: dict[str, str] = {}
-                for tag_id, value in gps_ifd.items():
-                    tag = GPSTAGS.get(tag_id, str(tag_id))
-                    gps[tag] = str(value)
-                if gps:
-                    result["GPS"] = gps
-
-            return result
+        with open(path, "rb") as f:
+            return extract_exif_metadata(f.read())
     except Exception:
         return {}
 
