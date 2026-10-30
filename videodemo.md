@@ -73,6 +73,14 @@ All required authentic and tampered forensic test pairs have been generated and 
   * Click the `Investigator: 1001` chip — observe it auto-fill and switch role.
 * **Script Anchor for AI**: *"Statutory access control enforces strict legal duty separation between Investigators, Forensic Analysts, and Court Auditors."*
 
+#### Step 1.3: Crime Scene Geolocation Radar (Tab [02])
+* **Action**: Click Tab **`[02] Case Portfolio`**.
+* **What to Show**:
+  * Point at the **Crime Scene Geolocation Radar** interactive map.
+  * Show the tactical glowing pins (green for authentic seizures, red for tampered assets) plotting coordinates across crime scenes.
+  * Click on a marker to show the popover with camera info and coordinates.
+* **Script Anchor for AI**: *"Physical chain of custody is mapped via our integrated Crime Scene Geolocation Radar, tracking the exact GPS coordinates and camera hardware where digital evidence was seized."*
+
 ---
 
 ### ⏱️ SECTION 2: Live Ingestion of New Evidence (0:25 – 1:00)
@@ -110,17 +118,18 @@ All required authentic and tampered forensic test pairs have been generated and 
   * Point at the updated KPI strip: `Evidence Items` and `Vector Indexed` counts.
   * Show the newly ingested items in the Evidence Table.
 
-#### Part A: Image Tamper Localization & 3-Way Slider (1:00 – 1:20)
+#### Part A: Image Tamper Localization, EXIF Intelligence & 3-Way Slider (1:00 – 1:20)
 * **Action**:
   * In the Evidence Table, locate an image item (e.g. `CCTV_Vault_Entrance_01.jpg` or existing image).
   * Click **`👁️ Inspect`**.
+  * **Showcase EXIF Forensic Card**: Point out Camera Hardware (`AXIS P3245-LVE`), Shutter Timestamps, and Crime Scene GPS Coordinates (`18.5204° N, 73.8567° E`) with `View on Map` link. If edited in Photoshop, point out the prominent red software manipulation alert!
   * Click **`🔬 Launch ELA & Tamper Radar`**.
   * Showcase:
     1. **Direct Red Tamper Localization Mask**: Pristine pixels remain natural while altered pixels glow in vivid red.
     2. **OpenCV Bounding Box**: Bounding box labeled **`ALTERED`** with coordinates.
     3. **3-Way Split-Screen Slider**: Drag the slider handle to compare Original Vault vs Red Tamper Highlight vs ELA Heatmap.
   * Close the ELA modal.
-* **Script Anchor for AI**: *"While traditional SHA-256 fails blindly when a single pixel changes, LEXVAULT computer-vision models isolate exact altered regions with red tamper masks and OpenCV bounding boxes for courtroom presentation."*
+* **Script Anchor for AI**: *"While traditional SHA-256 fails blindly when a single pixel changes, LEXVAULT computer-vision models isolate exact altered regions with red tamper masks and OpenCV bounding boxes, while the EXIF parser flags post-capture editing software signatures."*
 
 #### Part B: Word-Level Audio Scrubbing via `faster-whisper` (1:20 – 1:30)
 * **Action**:
