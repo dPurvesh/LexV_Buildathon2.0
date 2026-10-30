@@ -164,17 +164,16 @@ export default function ExifForensicsCard({
                 LAT: {Number(lat).toFixed(6)} • LON: {Number(lon).toFixed(6)}
                 {alt ? ` (${alt}m)` : ''}
               </code>
-              {mapsUrl && (
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="button button-secondary"
-                  style={{ fontSize: '10.5px', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                >
-                  View on Map <ExternalLink size={10} />
-                </a>
-              )}
+              <a
+                href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`}
+                target="_blank"
+                rel="noreferrer"
+                className="button button-secondary"
+                style={{ fontSize: '10.5px', padding: '3px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--cyan)' }}
+                title="Verify crime scene coordinates externally on OpenStreetMap / Leaflet in new tab"
+              >
+                OpenStreetMap / Leaflet <ExternalLink size={10} />
+              </a>
             </span>
           </div>
         )}
@@ -221,3 +220,4 @@ export default function ExifForensicsCard({
     </div>
   );
 }
+

@@ -1,7 +1,8 @@
 'use client';
 
 import { DragEvent, FormEvent, useRef, useState } from 'react';
-import { ImageIcon, Video, Music, FileText, FolderGit2, ShieldCheck, Download, X, AlertTriangle, CheckCircle2, Lock, RefreshCw, Cpu, Hourglass } from 'lucide-react';
+import LiveCrimeShutter from './LiveCrimeShutter';
+import { ImageIcon, Video, Music, FileText, FolderGit2, ShieldCheck, Camera, Download, X, AlertTriangle, CheckCircle2, Lock, RefreshCw, Cpu, Hourglass } from 'lucide-react';
 
 type FileStatus = 'queued' | 'hashing' | 'checking' | 'duplicate' | 'tampered' | 'uploading' | 'mining' | 'anchored' | 'error';
 
@@ -53,6 +54,7 @@ export default function BatchUpload() {
   const [files, setFiles] = useState<BatchFile[]>([]);
   const [caseNumber, setCaseNumber] = useState('CASE-2026-');
   const [custodian, setCustodian] = useState('mock-custodian');
+  const [intakeMode, setIntakeMode] = useState<'batch' | 'shutter'>('batch');
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -223,6 +225,32 @@ export default function BatchUpload() {
         </div>
       </div>
 
+      {/* ─── Intake Channel Switcher ─── */}
+      <div className="intake-channel-nav" style={{ display: 'flex', gap: '10px', margin: '4px 0 16px 0' }}>
+        <button
+          type="button"
+          className={`button ${intakeMode === 'batch' ? 'button-primary' : 'button-secondary'}`}
+          onClick={() => setIntakeMode('batch')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px' }}
+        >
+          <FolderGit2 size={15} /> Batch Evidence Intake Pipeline
+        </button>
+        <button
+          type="button"
+          className={`button ${intakeMode === 'shutter' ? 'button-primary' : 'button-secondary'}`}
+          onClick={() => setIntakeMode('shutter')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '13px', border: intakeMode === 'shutter' ? 'none' : '1px solid var(--emerald)' }}
+        >
+          <Camera size={15} color={intakeMode === 'shutter' ? '#ffffff' : 'var(--emerald)'} /> 
+          <span style={{ color: intakeMode === 'shutter' ? '#ffffff' : 'var(--emerald)', fontWeight: 600 }}>
+            Live Crime Scene Shutter (On-Spot Seizure)
+          </span>
+        </button>
+      </div>
+
+      {intakeMode === 'shutter' ? (
+        <LiveCrimeShutter defaultCase={caseNumber} defaultCustodian={custodian} />
+      ) : (
       <form onSubmit={processAll} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           <div className="inspector-card">
@@ -503,6 +531,7 @@ export default function BatchUpload() {
           </div>
         )}
       </form>
+      )}
     </section>
   );
 }

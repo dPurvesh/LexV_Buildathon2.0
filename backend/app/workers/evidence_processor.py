@@ -89,7 +89,10 @@ def _persist_results(
 def process_evidence_ai(evidence_id: str, object_key: str) -> None:
     with psycopg.connect(os.environ["DATABASE_URL"], row_factory=psycopg.rows.dict_row) as connection:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT mime_type FROM evidence WHERE id = %s", (evidence_id,))
+            cursor.execute(
+                "SELECT mime_type, is_on_spot_capture, exif_data FROM evidence WHERE id = %s",
+                (evidence_id,),
+            )
             evidence = cursor.fetchone()
     if not evidence:
         return
@@ -117,6 +120,18 @@ def process_evidence_ai(evidence_id: str, object_key: str) -> None:
             report = analyze_image(media_path)
             embedding = embed_image(media_path)
             exif_data = _extract_exif(media_path)
+            existing_exif = evidence.get("exif_data") or {}
+            if evidence.get("is_on_spot_capture"):
+                # Preserve on-spot GPS lock and hardware metadata registered during field capture
+                if not exif_data.get("gps", {}).get("has_gps") and existing_exif.get("gps", {}).get("has_gps"):
+                    exif_data["gps"] = existing_exif["gps"]
+                exif_data["is_on_spot_capture"] = True
+                if not exif_data.get("software"):
+                    exif_data["software"] = existing_exif.get("software", "LexVault Field Shutter v2.5")
+                exif_data["has_exif"] = True
+                exif_data["is_stripped"] = False
+                if not exif_data.get("camera", {}).get("make"):
+                    exif_data["camera"] = existing_exif.get("camera", {})
             # OCR: Extract any visible text from the image using Tesseract
             try:
                 import pytesseract

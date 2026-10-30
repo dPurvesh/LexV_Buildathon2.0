@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRole } from '../context/RoleContext';
-import { ImageIcon, Video, Music, FileText, Paperclip, Download, Lock, AlertTriangle, Check, ArrowUp, ArrowDown, Eye, Link2, X } from 'lucide-react';
+import { ImageIcon, Video, Music, FileText, Paperclip, Download, Lock, AlertTriangle, Check, ArrowUp, ArrowDown, Eye, Link2, X, MapPin } from 'lucide-react';
 
 type EvidenceItem = {
   id: string;
@@ -17,6 +17,16 @@ type EvidenceItem = {
   current_custodian_address: string;
   created_at: string;
   ai_indexed: boolean;
+  is_on_spot_capture?: boolean;
+  exif_data?: {
+    gps?: {
+      has_gps?: boolean;
+      latitude?: number;
+      longitude?: number;
+      osm_url?: string;
+    };
+    is_on_spot_capture?: boolean;
+  } | null;
 };
 
 type ListResponse = {
@@ -257,6 +267,31 @@ export default function EvidenceTable({
                     <td>
                       <span className="mime-icon">{mimeIcon(item.mime_type)}</span>
                       {item.title}
+                      {(item.is_on_spot_capture || item.exif_data?.is_on_spot_capture || item.title.includes('[ON-SPOT]')) && (
+                        <a
+                          href={item.exif_data?.gps?.osm_url || (item.exif_data?.gps?.latitude ? `https://www.openstreetmap.org/?mlat=${item.exif_data.gps.latitude}&mlon=${item.exif_data.gps.longitude}#map=17/${item.exif_data.gps.latitude}/${item.exif_data.gps.longitude}` : 'https://www.openstreetmap.org/?mlat=18.520417&mlon=73.856722#map=17/18.520417/73.856722')}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Captured directly on crime spot • Click to verify on external OpenStreetMap / Leaflet ↗"
+                          style={{
+                            marginLeft: '8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '10px',
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            background: 'rgba(16, 185, 129, 0.12)',
+                            border: '1px solid rgba(16, 185, 129, 0.35)',
+                            color: '#34d399',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <MapPin size={10} /> CRIME SPOT (GEO-TAGGED) ↗
+                        </a>
+                      )}
                     </td>
                     <td>
                       <small>{item.mime_type.split('/')[1]}</small>

@@ -205,3 +205,4 @@ def extract_exif_metadata(image_bytes: bytes) -> dict[str, Any]:
             "tamper_indicators": [],
             "raw_tags": {},
         }
+

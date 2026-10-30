@@ -130,6 +130,11 @@ export default function EvidenceInspector({
                   CASE: <code>{evidence.case_number}</code>
                 </span>
               )}
+              {(evidence?.title?.includes('[ON-SPOT]') || (evidence as any)?.is_on_spot_capture || (evidence as any)?.exif_data?.is_on_spot_capture) && (
+                <span className="tamper-badge tamper-clean" style={{ fontSize: '10.5px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  📍 CRIME SPOT CAPTURE (GEO-TAGGED)
+                </span>
+              )}
             </div>
             <h3 id="inspector-title">{evidence?.title ?? 'Loading evidence…'}</h3>
           </div>

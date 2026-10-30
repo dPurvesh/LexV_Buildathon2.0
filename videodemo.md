@@ -73,28 +73,33 @@ All required authentic and tampered forensic test pairs have been generated and 
   * Click the `Investigator: 1001` chip — observe it auto-fill and switch role.
 * **Script Anchor for AI**: *"Statutory access control enforces strict legal duty separation between Investigators, Forensic Analysts, and Court Auditors."*
 
-#### Step 1.3: Crime Scene Geolocation Radar (Tab [02])
+#### Step 1.3: Clean Case Portfolio & Case Dossiers (Tab [02])
 * **Action**: Click Tab **`[02] Case Portfolio`**.
 * **What to Show**:
-  * Point at the **Crime Scene Geolocation Radar** interactive map.
-  * Show the tactical glowing pins (green for authentic seizures, red for tampered assets) plotting coordinates across crime scenes.
-  * Click on a marker to show the popover with camera info and coordinates.
-* **Script Anchor for AI**: *"Physical chain of custody is mapped via our integrated Crime Scene Geolocation Radar, tracking the exact GPS coordinates and camera hardware where digital evidence was seized."*
+  * Point at the streamlined, lightning-fast case cards organized by Case IDs, seizure timelines, and evidence distribution.
+  * Click on a case to filter and isolate all associated evidence items instantly.
+* **Script Anchor for AI**: *"Case portfolios organize institutional investigations cleanly, aggregating forensic assets and custody status with zero latency."*
 
 ---
 
-### ⏱️ SECTION 2: Live Ingestion of New Evidence (0:25 – 1:00)
+### ⏱️ SECTION 2: Live Ingestion & On-Spot Crime Scene Shutter (0:25 – 1:00)
 * **Screen View**: Tab `[03] Ingestion & WORM Lock`.
 
-#### Step 2.1: Navigate to Ingestion Tab
-* **Action**: Click Tab **`[03] Ingestion & WORM Lock`**.
-* **What to Show**:
-  * Case Number: Enter `CASE-2026-CR902`.
-  * Custodian: Enter `Central Cyber Forensic Lab`.
-
-#### Step 2.2: Ingest the 3 Authentic Files
+#### Step 2.1: On-Spot Field Shutter (Direct Crime Scene Capture)
 * **Action**:
-  * Drag and drop the 3 authentic files from `demo_evidence/01_AUTHENTIC/`:
+  * In Tab **`[03] Ingestion & WORM Lock`**, click the **`📷 Live Crime Scene Shutter (On-Spot Seizure)`** toggle.
+  * Notice the tactical tactical HUD viewfinder overlay (`REC 1080P`, crosshairs, live UTC timestamp, and auto-acquired device GPS lock).
+  * Click **`📸 Snap & WORM-Lock Evidence`** (or select native camera file capture).
+* **What to Show**:
+  * Live camera stream acquires current GPS coordinates (`19.0760° N, 72.8777° E`).
+  * In-memory WebCrypto calculates SHA-256 before the image leaves the optical hardware.
+  * Instantly uploaded to MinIO WORM storage and anchored to MST Mainnet with verified transaction receipt.
+* **Script Anchor for AI**: *"Field investigators can seize photographic evidence directly on crime scenes using the Live Forensic Shutter, binding live device GPS coordinates, optical timestamps, and client-side SHA-256 digests into an immutable WORM record."*
+
+#### Step 2.2: Batch Intake Pipeline
+* **Action**:
+  * Switch back to the **`📁 Batch Evidence Intake Pipeline`** toggle.
+  * Drag and drop the authentic files from `demo_evidence/01_AUTHENTIC/`:
     1. `Forensic_Case_Report_CR902.pdf`
     2. `CCTV_Vault_Entrance_01.jpg`
     3. `Emergency_Radio_Dispatch_Call.wav`
@@ -102,27 +107,29 @@ All required authentic and tampered forensic test pairs have been generated and 
 * **What to Show**:
   * **Stage 01**: In-memory WebCrypto client-side SHA-256 hash generation with glowing progress bar.
   * **Stage 02**: MinIO WORM storage upload with immutable 365-day retention lock.
-  * **Stage 03**: Real-time smart contract transaction broadcast to MST Mainnet:
-    * Notice badge: `Mining on MST Chain (~15s)`.
-  * **Stage 04**: All 3 items turn green: **`ANCHORED`** with live MST transaction hashes!
-* **Script Anchor for AI**: *"During ingestion, client-side WebCrypto computes SHA-256 digests before sealing files under WORM retention and mining immutable cryptographic receipts directly onto the MST Mainnet."*
+  * **Stage 03**: Real-time smart contract transaction broadcast to MST Mainnet.
+  * **Stage 04**: Items turn green: **`ANCHORED`** with live MST transaction hashes!
+* **Script Anchor for AI**: *"Client-side WebCrypto computes SHA-256 digests before sealing files under WORM retention and mining immutable cryptographic receipts directly onto the MST Mainnet."*
 
 ---
 
 ### ⏱️ SECTION 3: Multi-Modal Forensic Deep Dive (1:00 – 1:40)
 * **Screen View**: Tab `[01] Repository & AI Search` $\rightarrow$ Evidence Table $\rightarrow$ Inspector Modals.
 
-#### Step 3.1: Switch to Repository Tab
+#### Step 3.1: Switch to Repository Tab & Geolocation Verification
 * **Action**: Click Tab **`[01] Repository & AI Search`**.
 * **What to Show**:
   * Point at the updated KPI strip: `Evidence Items` and `Vector Indexed` counts.
   * Show the newly ingested items in the Evidence Table.
+  * **Highlight Crime Spot Badge**: On the on-spot captured photo, show the badge: **`📍 CRIME SPOT (GEO-TAGGED) ↗`**.
+  * **Click the Badge**: Click it directly to demonstrate that it opens the exact crime scene coordinates on an external **OpenStreetMap / Leaflet** interactive satellite map in a brand new tab!
 
 #### Part A: Image Tamper Localization, EXIF Intelligence & 3-Way Slider (1:00 – 1:20)
 * **Action**:
   * In the Evidence Table, locate an image item (e.g. `CCTV_Vault_Entrance_01.jpg` or existing image).
   * Click **`👁️ Inspect`**.
-  * **Showcase EXIF Forensic Card**: Point out Camera Hardware (`AXIS P3245-LVE`), Shutter Timestamps, and Crime Scene GPS Coordinates (`18.5204° N, 73.8567° E`) with `View on Map` link. If edited in Photoshop, point out the prominent red software manipulation alert!
+  * Notice the **`📍 CRIME SPOT CAPTURE (GEO-TAGGED)`** header badge in the dossier.
+  * **Showcase EXIF Forensic Card**: Point out Camera Hardware (`On-Spot Forensic Shutter` or `AXIS P3245-LVE`), Shutter Timestamps, and Crime Scene GPS Coordinates with the **`OpenStreetMap / Leaflet ↗`** external redirect button. If edited in Photoshop, point out the prominent red software manipulation alert!
   * Click **`🔬 Launch ELA & Tamper Radar`**.
   * Showcase:
     1. **Direct Red Tamper Localization Mask**: Pristine pixels remain natural while altered pixels glow in vivid red.
