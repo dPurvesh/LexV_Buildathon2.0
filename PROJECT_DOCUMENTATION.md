@@ -242,6 +242,8 @@ Stores the primary evidence record:
 - Tamper flag.
 - Tamper score.
 - Creation timestamp.
+- `is_on_spot_capture`: Boolean indicating whether the evidence was captured live on-scene via the hardware optical shutter.
+- `exif_data`: JSONB object containing camera telemetry (Make, Model, Lens, Software signatures, ISO), GPS coordinates (latitude, longitude, elevation), direct **Google Maps Satellite & Pinpoint** link (`https://www.google.com/maps?q=...`), and EXIF stripping warnings.
 
 ### `evidence_ai_index`
 
@@ -907,14 +909,30 @@ Production hardening still required:
 - Automated end-to-end pipeline.
 - Dark Digital Forensics Command Center visual refactor.
 
-### Remaining production work
+### Completed & Production Deployed
 
-- Deploy `EvidenceTracker.sol` to MST Blockchain if not already deployed.
-- Set and verify `CONTRACT_ADDRESS`.
-- Test real on-chain registration and custody transfer.
-- Add user authentication and authorization.
-- Configure production HTTPS, storage, and secret management.
-- Add broader automated tests and observability.
+- Deployed `EvidenceTracker.sol` on **MST Mainnet** (`0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e`, Chain ID `4646`).
+- Live on-chain registration, custody transfers, and WORM retention verified on MSTScan.
+- 3-Persona Role-Based Access Control (`1001` Investigator, `2002` Forensic Lab, `3003` Court Justice).
+- Live cloud deployment on Render (Frontend: `https://lexv-buildathon2-0-frontend.onrender.com`, Backend: `https://lexvault-backend.onrender.com`).
+- Direct client-side JSON-RPC queries to `https://mariorpc.mstblockchain.com/` for real-time mobile/desktop node telemetry.
+- On-Spot Crime Scene Optical Shutter with real-time GPS geolocating and Google Maps pinpointing.
+- Deep EXIF & Hardware Metadata Forensics Card with stripping warnings and software signature inspection.
+- PDF Document Clause Differential Engine with forensic risk metrics.
+- Section 65B Indian Evidence Act / BSA § 63 court PDF certificate generator with dynamic QR codes.
+
+---
+
+## 22. Production Cloud Deployment & Live Infrastructure
+
+| Component | Target Platform | Live Endpoint / Contract |
+| :--- | :--- | :--- |
+| **Frontend Web App** | Render Cloud | [lexv-buildathon2-0-frontend.onrender.com](https://lexv-buildathon2-0-frontend.onrender.com) |
+| **Backend REST API** | Render Cloud | [lexvault-backend.onrender.com](https://lexvault-backend.onrender.com) |
+| **PostgreSQL Database** | Render Cloud (Oregon) | `evidence_db_htz2` (PostgreSQL 16) |
+| **MST Smart Contract** | MST Mainnet (Chain 4646) | [`0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e`](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) |
+| **MST Mainnet RPC** | Public Validator | `https://mariorpc.mstblockchain.com/` |
+| **MST Block Explorer** | MSTScan | [mstscan.com/address/0x62ae...](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) |
 
 ---
 

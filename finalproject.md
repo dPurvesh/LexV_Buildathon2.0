@@ -22,7 +22,10 @@ LEXVAULT combines:
    - **Pixel Difference Heatmaps**: Direct pixel delta highlighting exact spliced regions in thermal spectrum.
    - **PDF Document Text Diff**: Textual sequence alignment (`difflib`) highlighting additions in green and deletions in red.
 5. **Pre-Ingestion Tamper Screening & MST Blockchain Consensus**: Warns investigators before vault entry if a file is an altered derivative of existing evidence, flagging it as `is_tampered = TRUE`, logging `INTAKE_TAMPER_FLAGGED`, and presenting live MST Blockchain validator consensus progress (~12–25s block time).
-6. **Repository & Semantic Discovery**: Instant **`✕ Clear Filter`** button, 1-click semantic topic chips, and graceful zero-match guidance.
+6. **Real-Time On-Spot Crime Scene Shutter & Geotagging**: Native optical camera capture with device GPS lock (latitude, longitude, elevation), automatic **Google Maps Satellite & Pinpoint** binding (`https://www.google.com/maps?q=...`), in-memory SHA-256 pre-hashing, and immediate WORM on-chain minting.
+7. **Deep Hardware & EXIF Forensics Card**: Extracts sensor metadata (Make, Model, Lens, Software signatures, ISO, Timestamps) and automatically warns against sanitized/stripped EXIF or unauthorized post-capture image editing software.
+8. **Legal PDF Document Clause Differential Engine**: Sequence alignment algorithm highlighting inserted clauses in `+ green` and deleted clauses in `- red` with computed forensic risk ratings.
+9. **Repository & Semantic Discovery**: Instant **`✕ Clear Filter`** button, 1-click semantic topic chips, and graceful zero-match guidance.
 7. **Section 65B Indian Evidence Act Court Dossier Generator** producing cryptographically verified PDF certificates with dynamic verification QR codes.
 8. **Handcrafted Glassmorphism Command Center** designed with modern typography (Inter + Fira Code), dynamic blurred frosted panels, and responsive status telemetry.
 
@@ -124,7 +127,9 @@ CREATE TABLE evidence (
     is_tampered BOOLEAN DEFAULT FALSE,
     current_custodian_address VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    ai_indexed BOOLEAN DEFAULT FALSE
+    ai_indexed BOOLEAN DEFAULT FALSE,
+    is_on_spot_capture BOOLEAN DEFAULT FALSE,
+    exif_data JSONB DEFAULT NULL
 );
 ```
 
@@ -165,6 +170,8 @@ CREATE TABLE evidence_ai_index (
 ## 5. API Endpoints Catalog
 
 ### Evidence Management (`/api/v1/evidence`)
+- `POST /shutter-capture`: Native optical camera capture with live GPS geolocating, Google Maps linking, and immediate on-chain WORM minting.
+- `POST /diff-documents`: PDF legal clause differential analysis identifying inserted/deleted text between two document revisions.
 - `POST /upload`: Multipart upload with client SHA-256 verification, pre-ingestion derivative screening, MinIO WORM storage, MST Blockchain anchoring, and DB entry.
 - `POST /verify`: Deep multi-modal verification supporting binary file upload or SHA-256 JSON body. Executes exact cryptographic matching, perceptual hash comparison (pHash Hamming distance $\le 15$), Error Level Analysis (ELA) heatmap generation, direct visual pixel diffing (`diff_heatmap_b64`), direct red tamper highlight overlay with OpenCV bounding boxes (`red_overlay_b64`), tamper coordinates (`tamper_boxes`), altered pixel area ratio (`changed_pixels_ratio`), PDF text diffing (`difflib`), and detection of registered records flagged as tampered.
 - `GET /list`: Paginated evidence listing with search filter, case filter, and tamper indicators.
@@ -249,3 +256,16 @@ Adheres to international guidelines for digital evidence collection and preserva
 - **MinIO S3 API**: `http://localhost:9000`
 - **Blockchain Network**: MST Blockchain (Coral Testnet `54635` / Testnet `91562037` / Mainnet `4646`)
 - **Docker Compose Services**: `erinew-backend-1`, `erinew-frontend-1`, `erinew-database-1`, `erinew-minio-1`
+
+---
+
+## 10. Cloud Production Deployment & Live Verified Infrastructure
+
+| Component | Target Platform | Live Endpoint / Contract |
+| :--- | :--- | :--- |
+| **Frontend Web App** | Render Cloud | [lexv-buildathon2-0-frontend.onrender.com](https://lexv-buildathon2-0-frontend.onrender.com) |
+| **Backend REST API** | Render Cloud | [lexvault-backend.onrender.com](https://lexvault-backend.onrender.com) |
+| **Cloud Database** | Render PostgreSQL 16 (Oregon) | `evidence_db_htz2` (31 records, 35 custody events) |
+| **Smart Contract** | MST Mainnet (Chain ID 4646) | [`0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e`](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) |
+| **MST Mainnet RPC** | Public Validator | `https://mariorpc.mstblockchain.com/` |
+| **Block Explorer** | MSTScan | [mstscan.com](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) |

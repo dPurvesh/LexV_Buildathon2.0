@@ -122,14 +122,14 @@ All required authentic and tampered forensic test pairs have been generated and 
   * Point at the updated KPI strip: `Evidence Items` and `Vector Indexed` counts.
   * Show the newly ingested items in the Evidence Table.
   * **Highlight Crime Spot Badge**: On the on-spot captured photo, show the badge: **`📍 CRIME SPOT (GEO-TAGGED) ↗`**.
-  * **Click the Badge**: Click it directly to demonstrate that it opens the exact crime scene coordinates on an external **OpenStreetMap / Leaflet** interactive satellite map in a brand new tab!
+  * **Click the Badge**: Click it directly to demonstrate that it opens the exact crime scene coordinates on **Google Maps Satellite & Pinpoint** (`https://www.google.com/maps?q=...`) in a brand new tab with zero rate limits!
 
 #### Part A: Image Tamper Localization, EXIF Intelligence & 3-Way Slider (1:00 – 1:20)
 * **Action**:
   * In the Evidence Table, locate an image item (e.g. `CCTV_Vault_Entrance_01.jpg` or existing image).
   * Click **`👁️ Inspect`**.
   * Notice the **`📍 CRIME SPOT CAPTURE (GEO-TAGGED)`** header badge in the dossier.
-  * **Showcase EXIF Forensic Card**: Point out Camera Hardware (`On-Spot Forensic Shutter` or `AXIS P3245-LVE`), Shutter Timestamps, and Crime Scene GPS Coordinates with the **`OpenStreetMap / Leaflet ↗`** external redirect button. If edited in Photoshop, point out the prominent red software manipulation alert!
+  * **Showcase EXIF Forensic Card**: Point out Camera Hardware (`On-Spot Forensic Shutter` or `AXIS P3245-LVE`), Shutter Timestamps, Sensor Lens Model, and Crime Scene GPS Coordinates with the **`Google Maps Pinpoint ↗`** external redirect button. If edited in Photoshop, point out the prominent red software manipulation alert! If stripped, show the EXIF sanitizer warning!
   * Click **`🔬 Launch ELA & Tamper Radar`**.
   * Showcase:
     1. **Direct Red Tamper Localization Mask**: Pristine pixels remain natural while altered pixels glow in vivid red.

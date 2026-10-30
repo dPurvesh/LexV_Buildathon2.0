@@ -20,6 +20,7 @@ The following table explicitly maps the industry problem statement objectives to
 
 | # | Industry Objective | LEXVAULT Feature | What It Does & Business Value |
 |---|:---|:---|:---|
+| **0** | **On-Scene Field Seizure** | **Live Forensic Shutter & Google Maps Geotagging** | Field officers can capture photo evidence directly on crime scenes using hardware sensors. GPS latitude/longitude/elevation and camera telemetry are locked in an EXIF card with direct **Google Maps Satellite & Pinpoint** navigation, calculating SHA-256 before the file ever leaves optical RAM. |
 | **1** | **Evidence Repository** | **WORM Compliance Vault & Ingestion Pipeline** | Files are stored under **SEC Rule 17a-4 COMPLIANCE Object Lock**. Once uploaded, no one—not even root cloud administrators—can delete or modify evidence for 365 days. Dual-layer client pre-hashing ensures files cannot be intercepted or modified in transit. |
 | **2** | **AI-Assisted Indexing** | **Multimodal Semantic Search (`pgvector`) & Whisper AI Audio Transcription** | Investigators can find evidence using natural language concepts (e.g., *"red vehicle collision"* or *"knife near cash register"*). Audio and bodycam recordings are automatically transcribed into searchable, timestamped text words. |
 | **3** | **Blockchain Timestamping** | **MST Blockchain Smart Contract Settlement** | Each evidence item's unique SHA-256 fingerprint is registered on the public MST Blockchain (Coral Testnet / Mainnet). This provides an immutable, decentralized proof of existence on MSTScan that cannot be backdated or falsified by any agency. |
@@ -253,3 +254,11 @@ To prove hardware-level compliance storage to technical evaluators:
 - **Default Investigator PIN**: `1001`
 - **Default Forensic Analyst PIN**: `2002`
 - **Default Court Auditor PIN**: `3003`
+
+---
+
+## 🌐 Live Cloud Deployment (Mobile & Desktop Verified)
+* **Frontend Web App**: `https://lexv-buildathon2-0-frontend.onrender.com`
+* **Backend REST API**: `https://lexvault-backend.onrender.com`
+* **MST Mainnet Smart Contract**: `0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e` ([MSTScan Explorer](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e))
+* **Cloud Database**: Render PostgreSQL 16 (`evidence_db_htz2` with 31 pre-loaded evidence records)

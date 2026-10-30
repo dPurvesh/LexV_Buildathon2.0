@@ -110,6 +110,17 @@ Use these exact design specifications in PowerPoint, Google Slides, Keynote, Can
     * **Investigator (`PIN: 1001`)**: Intake, batch upload, custody handoffs.
     * **Forensic Analyst (`PIN: 2002`)**: ELA heatmaps, tamper radars, audio scrubbing.
     * **Court Auditor (`PIN: 3003`)**: Section 65B court dossier generation, CSV ledger exports.
+* **Feature 6: 📸 On-Spot Crime Scene Shutter & Google Maps Geotagging**
+  * Native optical sensor capture with live device GPS lock (lat, lon, altitude).
+  * Automatically embeds camera specs and links directly to **Google Maps Satellite & Pinpoint** for 1-click courtroom verification with zero rate limits.
+* **Feature 7: 🔬 Deep EXIF & Hardware Metadata Forensics Card**
+  * Extracts camera make, model, lens, and timestamps; automatically flags sanitized/stripped EXIF and photo editing software signatures (Photoshop, GIMP, Canva).
+* **Feature 8: 📜 Legal Document & Contract Clause Differential Engine**
+  * Sequence differential analysis isolating inserted clauses (`+ green`) and deleted clauses (`- red`) with computed legal risk ratings.
+  * Strict separation of institutional duties enforced via role PINs:
+    * **Investigator (`PIN: 1001`)**: Intake, batch upload, custody handoffs.
+    * **Forensic Analyst (`PIN: 2002`)**: ELA heatmaps, tamper radars, audio scrubbing.
+    * **Court Auditor (`PIN: 3003`)**: Section 65B court dossier generation, CSV ledger exports.
 
 ---
 

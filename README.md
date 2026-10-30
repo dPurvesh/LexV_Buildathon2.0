@@ -17,6 +17,17 @@
 
 ---
 
+## 🌐 Live Production Deployments & Contract Explorer
+
+| Service | Environment | Live URL | Proof / Explorer |
+| :--- | :--- | :--- | :--- |
+| **Frontend Web App** | Render Cloud | [lexv-buildathon2-0-frontend.onrender.com](https://lexv-buildathon2-0-frontend.onrender.com) | Responsive (Mobile + Desktop), auto-routes API |
+| **Backend API Gateway** | Render Cloud | [lexvault-backend.onrender.com](https://lexvault-backend.onrender.com) | Interactive Docs: `/docs` • Health: `/health` |
+| **MST Mainnet Smart Contract** | MST Mainnet (4646) | [`0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e`](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) | [View Verified Contract on MSTScan](https://mstscan.com/address/0x62ae3A34D97895EC7f353F0F8AC44ac4B2260c7e) |
+| **Render Cloud PostgreSQL** | Render Oregon | `evidence_db_htz2` (PostgreSQL 16) | Pre-populated with 31 evidence records & custody logs |
+
+---
+
 ## 📌 Executive Summary
 
 Modern legal systems face an unprecedented crisis of trust in electronic evidence. Trivial generative AI edits, visual splicing, and metadata tampering have made digital media easy to manipulate, while conventional hashing systems fail to provide diagnostic clarity.
@@ -107,6 +118,22 @@ Enforces Indian legal duty separation with restricted PIN access:
 * **Forensic Analyst (`PIN: 2002`)**: ELA heatmaps, tamper radars, perceptual audio scrubbing.
 * **Compliance Auditor (`PIN: 3003`)**: Statutory Section 65B PDF court dossiers, global CSV audit exports.
 
+### 7. 📸 Real-Time Crime Scene Optical Shutter & Google Maps Geotagging
+* Field investigators can seize photographic evidence directly on crime scenes using the hardware camera sensor.
+* Live sensor acquisition embeds latitude, longitude, and elevation into an optical hardware profile (`LexVault Field Shutter v2.5`).
+* Auto-generates a direct **Google Maps Satellite & Pinpoint** link (`https://www.google.com/maps?q=${lat},${lon}`) for 1-click courtroom verification with zero API rate limits.
+* Computes WebCrypto SHA-256 before the image leaves optical memory and seals the record immediately on MST Mainnet.
+
+### 8. 🔬 Deep EXIF & Hardware Metadata Forensics Card
+* Extracts extensive camera and sensor telemetry: Make, Model, Lens Model, Software Signatures, Timestamps, and ISO values.
+* **Tamper Indicators**:
+  * Automatically flags when EXIF metadata has been intentionally stripped or sanitized (common web re-encoding or obfuscation).
+  * Detects software tampering signatures from manipulation suites like Adobe Photoshop, GIMP, or Canva.
+
+### 9. 📜 Legal Document & Contract Clause Differential Engine
+* Sequence differential engine specifically built for legal PDF case reports and contracts.
+* Detects stealthy modifications, inserted clauses (highlighted in `+ green`), and deleted liability clauses (highlighted in `- red`) with computed forensic risk ratings.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -193,9 +220,11 @@ npm run dev
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/evidence/upload` | Ingests file with WebCrypto verification, MinIO WORM lock & MST Chain anchor |
 | `POST` | `/api/v1/evidence/batch-upload` | Concurrent multipart ingestion pipeline with pre-screening |
+| `POST` | `/api/v1/evidence/shutter-capture` | On-spot optical shutter capture with live GPS geolocating & Google Maps linking |
+| `POST` | `/api/v1/evidence/diff-documents` | PDF legal clause differential analysis identifying inserted/deleted text |
 | `POST` | `/api/v1/evidence/verify` | Multi-modal forensic evaluation (SHA-256 + pHash + OpenCV red localization + ELA) |
-| `GET` | `/api/v1/evidence/list` | Paginated evidence vault listing with case and tamper filters |
-| `GET` | `/api/v1/evidence/{id}/detail` | Full forensic dossier, custody history, and transcript metadata |
+| `GET` | `/api/v1/evidence/list` | Paginated evidence vault listing with case, geotag, and tamper filters |
+| `GET` | `/api/v1/evidence/{id}/detail` | Full forensic dossier, EXIF metadata, custody history, and transcript metadata |
 | `POST` | `/api/v1/evidence/{id}/transfer-custody` | Statutory custody handoff with on-chain MST smart contract settlement |
 | `GET` | `/api/v1/evidence/{id}/certificate` | Downloads Section 65B / BSA § 63 court PDF dossier with dynamic QR code |
 | `POST` | `/api/v1/evidence/search-semantic` | CLIP ViT vector similarity search powered by `pgvector` |

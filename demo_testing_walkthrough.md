@@ -518,3 +518,26 @@ Print or keep this quick sequence in mind for your final demonstration:
    - Drop an edited PDF ➔ Text diff viewer highlighting additions and deletions.
 9. **Export Ledger**: Click `Export Global Ledger (CSV)` to prove transparent external auditability.
 
+
+---
+
+## Test 9: On-Spot Crime Scene Optical Shutter & Google Maps Geotagging
+
+### What to Test:
+Verify that field investigators can seize live photographic evidence on scene with real-time GPS coordinate acquisition, hardware sensor profile embedding, and direct Google Maps pinpoint linking.
+
+### Step-by-Step Actions:
+1. Navigate to Tab **`[03] Ingestion & WORM Lock`**.
+2. Click the toggle **`📷 Live Crime Scene Shutter (On-Spot Seizure)`**.
+3. Observe the tactical HUD viewfinder overlay (`REC 1080P`, crosshairs, live UTC timestamp, and auto-acquired device GPS lock).
+4. Click **`📸 Snap & WORM-Lock Evidence`**.
+5. Once ingested, go to Tab **`[01] Repository & AI Search`**.
+6. Find the newly ingested photo and locate the badge: **`📍 CRIME SPOT (GEO-TAGGED) ↗`**.
+7. Click the badge — verify it opens the exact crime scene coordinates on **Google Maps Satellite & Pinpoint** in a new browser tab.
+8. Click **`👁️ Inspect`** and review the **EXIF Forensics Card**: confirm Camera Hardware (`LexVault Field Shutter v2.5`), Lens Model, GPS Latitude/Longitude/Altitude, and software integrity tags.
+
+### Expected Visual Result:
+- Live camera stream acquires current GPS coordinates without browser errors.
+- WebCrypto computes client-side SHA-256 before upload.
+- Record is sealed in MinIO WORM storage and mined on MST Mainnet.
+- Google Maps loads with exact red pin on crime scene coordinates.
